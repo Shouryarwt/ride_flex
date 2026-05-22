@@ -6,6 +6,7 @@ import Home from './Home';
 import Auth from './Auth';
 import UserDashboard from './UserDashboard';
 import SellerDashboard from './SellerDashboard';
+import AdminDashboard from './AdminDashboard';
 import ProfileSettings from './ProfileSettings';
 
 const ProtectedRoute = ({ children, allowedRole }) => {
@@ -38,6 +39,14 @@ function App() {
                 <SellerDashboard />
               </ProtectedRoute>
             } 
+          />
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedRoute allowedRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
           />
           <Route 
             path="/profile" 

@@ -20,6 +20,7 @@ export interface IDealer extends Document {
   shopName: string;
   address: string;
   city: string;
+  pincode: string;
   bankName: string;
   accountNo: string;
   ifsc: string;
@@ -34,13 +35,29 @@ export interface IVehicle extends Document {
   title: string;
   description?: string;
   type: 'bike' | 'scooter' | 'car';
+  fuelType: 'Petrol' | 'Diesel' | 'Electric' | 'CNG';
+  transmission: 'Manual' | 'Automatic';
+  seatingCapacity: number;
   engineSegment: string;
   city: string;
   images: string[];
+  rcNumber: string;
+  rcDocument?: string;
+  insuranceExpiry: Date;
+  insuranceStartDate?: Date;
+  insuranceDocument?: string;
+  pollutionExpiry: Date;
+  pollutionStartDate?: Date;
+  pollutionDocument?: string;
   pricePerHour: number;
   pricePerDay: number;
   deliveryAvailable: boolean;
   deliveryChargePerKm: number;
+  availableFrom?: Date;
+  availableTo?: Date;
+  weekendPrice?: number;
+  holidayPrice?: number;
+  minDuration?: number;
   isActive: boolean;
 }
 
@@ -51,7 +68,7 @@ export interface IBooking extends Document {
   endDate: Date;
   totalHours: number;
   totalAmount: number;
-  bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+  bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'rejected' | 'completed';
   paymentStatus: 'unpaid' | 'paid';
 }
 
@@ -64,6 +81,15 @@ export interface IPayment extends Document {
   status: 'pending' | 'success' | 'failed';
 }
 
+export interface INotification extends Document {
+  recipient: IUser['_id'];
+  booking: IBooking['_id'];
+  type: 'booking_request' | 'booking_confirmed' | 'booking_cancelled';
+  message: string;
+  read: boolean;
+}
+
 export interface AuthRequest extends Request {
   user?: IUser;
 }
+

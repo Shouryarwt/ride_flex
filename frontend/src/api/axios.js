@@ -12,7 +12,7 @@ const api = axios.create({
 // Add token to requests
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('rideFlexToken');
+    const token = localStorage.getItem('rideFlexToken') || sessionStorage.getItem('rideFlexToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -30,6 +30,8 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('rideFlexToken');
       localStorage.removeItem('rideFlexUser');
+      sessionStorage.removeItem('rideFlexToken');
+      sessionStorage.removeItem('rideFlexUser');
       window.location.href = '/auth';
     }
     return Promise.reject(error);

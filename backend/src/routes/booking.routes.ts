@@ -3,6 +3,7 @@ import {
   createBooking,
   getMyBookings,
   getBookingById,
+  getVehicleBookings,
   updateBookingStatus,
   cancelBooking,
   getSellerBookings,
@@ -14,6 +15,7 @@ const router = Router();
 router.post('/', authenticate, authorize('user'), createBooking);
 router.get('/my-bookings', authenticate, authorize('user'), getMyBookings);
 router.get('/seller-bookings', authenticate, authorize('seller'), getSellerBookings);
+router.get('/vehicle/:vehicleId', authenticate, getVehicleBookings);
 router.get('/:id', authenticate, getBookingById);
 router.put('/:id/status', authenticate, authorize('seller'), updateBookingStatus);
 router.put('/:id/cancel', authenticate, authorize('user'), cancelBooking);

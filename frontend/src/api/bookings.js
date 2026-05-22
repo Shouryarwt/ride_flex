@@ -16,6 +16,11 @@ export const bookingAPI = {
     return response.data;
   },
 
+  getVehicleBookings: async (vehicleId) => {
+    const response = await api.get(`/bookings/vehicle/${vehicleId}`);
+    return response.data;
+  },
+
   getBookingById: async (id) => {
     const response = await api.get(`/bookings/${id}`);
     return response.data;

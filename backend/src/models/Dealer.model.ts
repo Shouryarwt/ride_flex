@@ -32,6 +32,12 @@ const dealerSchema = new Schema<IDealer>(
       required: [true, 'City is required'],
       trim: true,
     },
+    pincode: {
+      type: String,
+      required: [true, 'Pincode is required'],
+      trim: true,
+      match: [/^[0-9]{6}$/, 'Please provide a valid 6-digit pincode'],
+    },
     bankName: {
       type: String,
       required: [true, 'Bank name is required'],

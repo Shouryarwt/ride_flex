@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from 'jspdf';
-import { MapPin, Utensils, Navigation, Calendar, Filter, Heart, X, Search, Star, History, CheckCircle, Download, HelpCircle, MessageSquare, Send, ChevronDown, ChevronUp, Camera, Mountain, Plus, Check, Map, Share2, Cloud, Wind, Droplets, ChevronRight, ChevronLeft, Copy, ArrowRightLeft, PlusCircle, LayoutGrid } from 'lucide-react';
+import { MapPin, Utensils, Navigation, Calendar, Filter, Heart, X, Search, Star, History, CheckCircle, Download, HelpCircle, MessageSquare, Send, ChevronDown, ChevronUp, Camera, Mountain, Plus, Check, Map, Share2, Cloud, Wind, Droplets, ChevronRight, ChevronLeft, Copy, ArrowRightLeft, PlusCircle, LayoutGrid, Fuel, Gauge, Users, SlidersHorizontal, RotateCcw } from 'lucide-react';
 const MOCK_VEHICLES = [
   { 
     id: 1, 
@@ -8,7 +8,9 @@ const MOCK_VEHICLES = [
     type: "Bike", 
     price: 1500, 
     location: "Downtown", 
-    img: "https://placehold.co/300x200?text=BMW+Bike",
+    img: "https://images.unsplash.com/photo-1558981285-6f0c94958bb6?auto=format&fit=crop&w=900&q=80",
+    rating: 4.9,
+    summary: "Adventure-ready premium bike with touring comfort.",
     regNo: "UK07-BW-1234",
     seats: "2",
     engineType: "Boxer",
@@ -27,7 +29,9 @@ const MOCK_VEHICLES = [
     type: "Car", 
     price: 5000, 
     location: "Airport", 
-    img: "https://placehold.co/300x200?text=Mercedes",
+    img: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=900&q=80",
+    rating: 4.8,
+    summary: "Luxury automatic sedan for smooth city and highway rides.",
     regNo: "UK07-MC-5678",
     seats: "5",
     engineType: "Inline-4",
@@ -46,7 +50,9 @@ const MOCK_VEHICLES = [
     type: "Scooter", 
     price: 600, 
     location: "Connaught Place", 
-    img: "https://placehold.co/300x200?text=Vespa",
+    img: "https://images.unsplash.com/photo-1591637333184-19aa84b3e01f?auto=format&fit=crop&w=900&q=80",
+    rating: 4.7,
+    summary: "Compact scooter for quick errands and easy parking.",
     regNo: "UK07-VS-9012",
     seats: "2",
     engineType: "Single Cylinder",
@@ -67,6 +73,29 @@ const MOCK_FOOD_SPOTS = [
   { name: "Kalsang Friends Corner", distance: "5km", rating: 4.6, specialty: "Tibetan Cuisine", cuisine: "Tibetan" },
   { name: "Ellora's Melting Moments", distance: "4km", rating: 4.7, specialty: "Stick Jaw Toffees", cuisine: "Bakery" },
 ];
+
+const ADDITIONAL_FOOD_SPOTS = [
+  { name: "Anandam", distance: "2.5km", rating: 4.6, specialty: "North Indian Thali", cuisine: "North Indian" },
+  { name: "Town Table", distance: "3.2km", rating: 4.5, specialty: "Paneer Tikka & Curries", cuisine: "North Indian" },
+  { name: "Punjab Grill Express", distance: "4.8km", rating: 4.4, specialty: "Butter Naan Combos", cuisine: "North Indian" },
+  { name: "Kumar Sweet Shop", distance: "1.8km", rating: 4.5, specialty: "Chaat & Samosa", cuisine: "Street Food" },
+  { name: "Rajpur Road Chaat Corner", distance: "2.7km", rating: 4.4, specialty: "Aloo Tikki Chaat", cuisine: "Street Food" },
+  { name: "Paltan Bazaar Momos", distance: "3.6km", rating: 4.3, specialty: "Steamed Momos", cuisine: "Street Food" },
+  { name: "Ama Cafe", distance: "5.4km", rating: 4.6, specialty: "Thukpa & Momos", cuisine: "Tibetan" },
+  { name: "Lhasa Kitchen", distance: "6.2km", rating: 4.5, specialty: "Tingmo & Shapta", cuisine: "Tibetan" },
+  { name: "Tibet Kitchen", distance: "6.8km", rating: 4.4, specialty: "Authentic Thukpa", cuisine: "Tibetan" },
+  { name: "Standard Bakers", distance: "2.1km", rating: 4.6, specialty: "Fresh Cream Rolls", cuisine: "Bakery" },
+  { name: "Nany's Bakery", distance: "3.3km", rating: 4.5, specialty: "Cakes & Pastries", cuisine: "Bakery" },
+  { name: "Sunrise Bakers", distance: "4.1km", rating: 4.4, specialty: "Rusks & Cookies", cuisine: "Bakery" },
+];
+
+const FOOD_QUERY_BY_CUISINE = {
+  All: 'node(around:8000,LAT,LNG)[amenity~"restaurant|cafe|fast_food"];node(around:8000,LAT,LNG)[shop=bakery];',
+  "North Indian": 'node(around:8000,LAT,LNG)[amenity~"restaurant|fast_food"][cuisine~"indian|north_indian",i];',
+  "Street Food": 'node(around:8000,LAT,LNG)[amenity~"fast_food|food_court"];node(around:8000,LAT,LNG)[cuisine~"street_food|chaat|snack|momo",i];',
+  Tibetan: 'node(around:8000,LAT,LNG)[amenity~"restaurant|fast_food|cafe"][cuisine~"tibetan|momo",i];',
+  Bakery: 'node(around:8000,LAT,LNG)[shop=bakery];node(around:8000,LAT,LNG)[amenity=cafe][cuisine~"bakery|cake|pastry",i];',
+};
 
 const MOCK_TOURIST_SPOTS = [
   // Dehradun & Nearby
@@ -125,6 +154,46 @@ const MOCK_FAQS = [
   { question: "What is the cancellation policy?", answer: "You can cancel up to 24 hours before the booking start time for a full refund." },
 ];
 
+const DEFAULT_WEATHER_LOCATION = {
+  latitude: 30.3165,
+  longitude: 78.0322,
+  name: "Dehradun, Uttarakhand",
+};
+
+const DEHRADUN_MAP_EMBED_URL = "https://www.openstreetmap.org/export/embed.html?bbox=77.9656%2C30.2365%2C78.1456%2C30.3965&layer=mapnik&marker=30.3165%2C78.0322";
+
+const WMO_CODES = {
+  0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+  45: 'Fog', 48: 'Depositing rime fog',
+  51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
+  61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
+  71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
+  95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Thunderstorm with heavy hail'
+};
+
+const fetchWeatherForLocation = async ({ latitude, longitude, name }) => {
+  const params = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    current: "temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m",
+    timezone: "auto",
+  });
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+  if (!response.ok) {
+    throw new Error("Weather request failed");
+  }
+  const data = await response.json();
+  const current = data.current;
+
+  return {
+    temp: Math.round(current.temperature_2m),
+    condition: WMO_CODES[current.weather_code] || 'Unknown',
+    humidity: Math.round(current.relative_humidity_2m),
+    windSpeed: Math.round(current.wind_speed_10m),
+    location: name,
+  };
+};
+
 const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState('browse');
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
@@ -156,6 +225,7 @@ const UserDashboard = () => {
   const [qrTimer, setQrTimer] = useState(90);
   const [isQrExpired, setIsQrExpired] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState('All');
   const [transmissionFilter, setTransmissionFilter] = useState('All');
   const [fuelFilter, setFuelFilter] = useState('All');
   const [compareList, setCompareList] = useState([]);
@@ -164,6 +234,7 @@ const UserDashboard = () => {
   const [foodSpots, setFoodSpots] = useState(MOCK_FOOD_SPOTS);
   const [touristSpots, setTouristSpots] = useState(MOCK_TOURIST_SPOTS);
   const [userLocation, setUserLocation] = useState(null);
+  const [nearbyFoodLocation, setNearbyFoodLocation] = useState(null);
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -317,24 +388,58 @@ const UserDashboard = () => {
     return Math.min(maxTime, calculatedTime);
   };
 
+  const mapFoodElement = (el, latitude, longitude, region = "", fallbackCuisine = "Local") => {
+    const cuisineTag = el.tags?.cuisine || (el.tags?.shop === 'bakery' ? 'Bakery' : (el.tags?.amenity === 'cafe' ? 'Coffee' : fallbackCuisine));
+    const primaryCuisine = cuisineTag.split(';')[0].replace(/_/g, ' ');
+    const cuisine = fallbackCuisine !== 'All' && fallbackCuisine !== 'Local'
+      ? fallbackCuisine
+      : primaryCuisine.charAt(0).toUpperCase() + primaryCuisine.slice(1);
+    const getSpecialty = (cuisineName, regionName) => {
+      const c = cuisineName.toLowerCase();
+      const r = regionName.toLowerCase();
+      if (c.includes('bakery') || c.includes('cake') || c.includes('pastry')) return "Fresh Bakes & Pastries";
+      if (c.includes('tibetan') || c.includes('momo')) return "Momos & Thukpa";
+      if (c.includes('fast') || c.includes('street') || c.includes('chaat')) return "Local Street Snacks";
+      if (c.includes('indian')) {
+        if (r.includes('punjab') || r.includes('delhi') || r.includes('uttarakhand')) return "North Indian Favorites";
+        return "Traditional Thali";
+      }
+      if (c.includes('coffee') || c.includes('cafe')) return "Coffee & Snacks";
+      return `${cuisine} Special`;
+    };
+
+    return {
+      name: el.tags?.name || "Local Eatery",
+      distance: `${calculateDistance(latitude, longitude, el.lat, el.lon).toFixed(1)}km`,
+      rating: (3.8 + Math.random() * 1.1).toFixed(1),
+      specialty: getSpecialty(cuisineTag, region),
+      cuisine,
+    };
+  };
+
+  const fetchNearbyFood = async ({ latitude, longitude, cuisine = 'All', region = '' }) => {
+    const queryTemplate = FOOD_QUERY_BY_CUISINE[cuisine] || FOOD_QUERY_BY_CUISINE.All;
+    const overpassQuery = `[out:json][timeout:25];(${queryTemplate.replaceAll('LAT', latitude).replaceAll('LNG', longitude)});out 40;`;
+    const foodRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`);
+    const foodData = await foodRes.json();
+    const mapped = (foodData.elements || [])
+      .map(el => mapFoodElement(el, latitude, longitude, region, cuisine))
+      .filter(el => el.name !== "Local Eatery");
+
+    if (mapped.length > 0) {
+      setFoodSpots(prev => {
+        const merged = [...mapped, ...prev, ...MOCK_FOOD_SPOTS, ...ADDITIONAL_FOOD_SPOTS];
+        return merged.filter((spot, index, list) => list.findIndex(item => item.name === spot.name) === index);
+      });
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'smart' && !weather) {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(async (position) => {
           try {
             const { latitude, longitude } = position.coords;
-            const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`);
-            const data = await response.json();
-            
-            const wmoCodes = {
-              0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
-              45: 'Fog', 48: 'Depositing rime fog',
-              51: 'Light drizzle', 53: 'Moderate drizzle', 55: 'Dense drizzle',
-              61: 'Slight rain', 63: 'Moderate rain', 65: 'Heavy rain',
-              71: 'Slight snow', 73: 'Moderate snow', 75: 'Heavy snow',
-              95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Thunderstorm with heavy hail'
-            };
-
             let locationName = "Your Location";
             let region = "";
             try {
@@ -348,13 +453,7 @@ const UserDashboard = () => {
               console.log("Reverse geocoding failed", e);
             }
 
-            setWeather({
-              temp: Math.round(data.current_weather.temperature),
-              condition: wmoCodes[data.current_weather.weathercode] || 'Unknown',
-              humidity: 60 + Math.floor(Math.random() * 20),
-              windSpeed: data.current_weather.windspeed,
-              location: locationName
-            });
+            setWeather(await fetchWeatherForLocation({ latitude, longitude, name: locationName }));
 
             const calcDist = (lat1, lon1, lat2, lon2) => {
               const R = 6371; 
@@ -367,49 +466,9 @@ const UserDashboard = () => {
               return (R * c).toFixed(1);
             };
 
-            const getSpecialty = (cuisine, regionName) => {
-              if (!cuisine) return "Local Delicacy";
-              const c = cuisine.toLowerCase();
-              const r = regionName.toLowerCase();
-
-              if (c.includes('pizza')) return "Wood Fired Pizza";
-              if (c.includes('burger')) return "Gourmet Burger";
-              
-              if (c.includes('indian')) {
-                if (r.includes('punjab') || r.includes('delhi')) return "Butter Chicken & Naan";
-                if (r.includes('maharashtra')) return "Misal Pav";
-                if (r.includes('tamil') || r.includes('kerala') || r.includes('karnataka')) return "Masala Dosa";
-                if (r.includes('bengal')) return "Fish Curry";
-                if (r.includes('rajasthan')) return "Dal Baati Churma";
-                if (r.includes('gujarat')) return "Gujarati Thali";
-                if (r.includes('goa')) return "Seafood Curry";
-                return "Traditional Thali";
-              }
-
-              if (c.includes('chinese')) return "Hakka Noodles";
-              if (c.includes('japanese')) return "Sushi Platter";
-              if (c.includes('mexican')) return "Tacos & Burritos";
-              if (c.includes('italian')) return "Pasta Alfredo";
-              if (c.includes('coffee') || c.includes('cafe')) return "Cappuccino & Croissant";
-              if (c.includes('bakery')) return "Fresh Pastries";
-              return c.charAt(0).toUpperCase() + c.slice(1) + " Special";
-            };
-
             try {
-              const foodRes = await fetch(`https://overpass-api.de/api/interpreter?data=[out:json];node(around:5000,${latitude},${longitude})[amenity~"restaurant|cafe|fast_food"];out 10;`);
-              const foodData = await foodRes.json();
-              if (foodData.elements && foodData.elements.length > 0) {
-                setFoodSpots(foodData.elements.map(el => {
-                  const cuisineTag = el.tags.cuisine || (el.tags.amenity === 'cafe' ? 'Coffee' : 'Local');
-                  return {
-                    name: el.tags.name || "Local Eatery",
-                    distance: `${calcDist(latitude, longitude, el.lat, el.lon)}km`,
-                    rating: (3.5 + Math.random() * 1.4).toFixed(1),
-                    specialty: getSpecialty(cuisineTag, region),
-                    cuisine: cuisineTag.split(';')[0].charAt(0).toUpperCase() + cuisineTag.split(';')[0].slice(1)
-                  };
-                }).filter(el => el.name !== "Local Eatery"));
-              }
+              setNearbyFoodLocation({ latitude, longitude, region });
+              await fetchNearbyFood({ latitude, longitude, cuisine: foodCuisineFilter, region });
             } catch (e) { console.error("Food fetch failed", e); }
 
             const getTouristCategory = (tags) => {
@@ -434,17 +493,35 @@ const UserDashboard = () => {
             } catch (e) { console.error("Tourist fetch failed", e); }
           } catch (error) {
             console.error("Error fetching weather:", error);
-            setWeather({ temp: 24, condition: "Partly Cloudy", humidity: 65, windSpeed: 12, location: "Dehradun, Uttarakhand" });
+            try {
+              setWeather(await fetchWeatherForLocation(DEFAULT_WEATHER_LOCATION));
+            } catch (fallbackError) {
+              console.error("Fallback weather failed:", fallbackError);
+            }
           }
-        }, (error) => {
+        }, async (error) => {
           console.error("Geolocation error:", error);
-          setWeather({ temp: 24, condition: "Partly Cloudy", humidity: 65, windSpeed: 12, location: "Dehradun, Uttarakhand" });
+          try {
+            setWeather(await fetchWeatherForLocation(DEFAULT_WEATHER_LOCATION));
+          } catch (fallbackError) {
+            console.error("Fallback weather failed:", fallbackError);
+          }
         });
       } else {
-        setWeather({ temp: 24, condition: "Partly Cloudy", humidity: 65, windSpeed: 12, location: "Dehradun, Uttarakhand" });
+        fetchWeatherForLocation(DEFAULT_WEATHER_LOCATION)
+          .then(setWeather)
+          .catch((fallbackError) => console.error("Fallback weather failed:", fallbackError));
       }
     }
   }, [activeTab, weather]);
+
+  useEffect(() => {
+    if (activeTab !== 'smart' || !nearbyFoodLocation || foodCuisineFilter === 'All') return;
+    fetchNearbyFood({
+      ...nearbyFoodLocation,
+      cuisine: foodCuisineFilter,
+    }).catch((error) => console.error("Cuisine food fetch failed:", error));
+  }, [activeTab, foodCuisineFilter, nearbyFoodLocation]);
 
   const toggleItinerary = (spot) => {
     if (itinerary.find(item => item.name === spot.name)) {
@@ -605,9 +682,10 @@ const UserDashboard = () => {
     const max = priceRange.max ? Number(priceRange.max) : Infinity;
     const matchesSearch = v.name.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesLocation = v.location.toLowerCase().includes(locationQuery.toLowerCase());
+    const matchesType = vehicleTypeFilter === 'All' || v.type === vehicleTypeFilter;
     const matchesTransmission = transmissionFilter === 'All' || v.transmission === transmissionFilter;
     const matchesFuel = fuelFilter === 'All' || v.fuel === fuelFilter;
-    return v.price >= min && v.price <= max && matchesSearch && matchesLocation && matchesTransmission && matchesFuel;
+    return v.price >= min && v.price <= max && matchesSearch && matchesLocation && matchesType && matchesTransmission && matchesFuel;
   }).sort((a, b) => {
     if (sortOrder === 'lowToHigh') return a.price - b.price;
     if (sortOrder === 'highToLow') return b.price - a.price;
@@ -619,8 +697,40 @@ const UserDashboard = () => {
     return 0;
   });
 
+  const resetBrowseFilters = () => {
+    setSearchQuery('');
+    setLocationQuery('');
+    setPriceRange({ min: '', max: '' });
+    setVehicleTypeFilter('All');
+    setTransmissionFilter('All');
+    setFuelFilter('All');
+    setSortOrder('');
+  };
+
+  const activeBrowseFilters = [
+    searchQuery && { label: `Search: ${searchQuery}`, clear: () => setSearchQuery('') },
+    locationQuery && { label: `Location: ${locationQuery}`, clear: () => setLocationQuery('') },
+    priceRange.min && { label: `Min: ₹${priceRange.min}`, clear: () => setPriceRange(prev => ({ ...prev, min: '' })) },
+    priceRange.max && { label: `Max: ₹${priceRange.max}`, clear: () => setPriceRange(prev => ({ ...prev, max: '' })) },
+    vehicleTypeFilter !== 'All' && { label: `Type: ${vehicleTypeFilter}`, clear: () => setVehicleTypeFilter('All') },
+    transmissionFilter !== 'All' && { label: `Transmission: ${transmissionFilter}`, clear: () => setTransmissionFilter('All') },
+    fuelFilter !== 'All' && { label: `Fuel: ${fuelFilter}`, clear: () => setFuelFilter('All') },
+    sortOrder && { label: sortOrder === 'lowToHigh' ? 'Price: Low to High' : sortOrder === 'highToLow' ? 'Price: High to Low' : 'Nearest first', clear: () => setSortOrder('') },
+  ].filter(Boolean);
+
+  const displayedFoodSpots = [...foodSpots, ...MOCK_FOOD_SPOTS, ...ADDITIONAL_FOOD_SPOTS]
+    .filter((spot, index, list) => list.findIndex(item => item.name === spot.name) === index)
+    .filter(spot => foodCuisineFilter === 'All' || spot.cuisine === foodCuisineFilter)
+    .sort((a, b) => {
+      if (foodSort === 'ratingDesc') return b.rating - a.rating;
+      if (foodSort === 'ratingAsc') return a.rating - b.rating;
+      if (foodSort === 'distanceAsc') return parseFloat(a.distance) - parseFloat(b.distance);
+      if (foodSort === 'distanceDesc') return parseFloat(b.distance) - parseFloat(a.distance);
+      return 0;
+    });
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 text-slate-950 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
       <div className="container mx-auto p-6 dark:text-white">
       <div className="flex gap-4 mb-8 border-b pb-4">
         <button 
@@ -663,7 +773,79 @@ const UserDashboard = () => {
 
       {activeTab === 'browse' && (
         <div className="space-y-6">
-          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-wrap items-center gap-4">
+          <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-gray-100 dark:border-slate-700 space-y-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <SlidersHorizontal size={20} /> Find Your Ride
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Filter by type, price, fuel, transmission, or location.</p>
+              </div>
+              <button
+                onClick={resetBrowseFilters}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 transition"
+              >
+                <RotateCcw size={16} /> Reset
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+              <label className="flex items-center gap-2 border border-gray-200 dark:border-slate-600 p-2 rounded-lg bg-gray-50 dark:bg-slate-700">
+                <Search size={18} className="text-gray-400" />
+                <input type="text" placeholder="Search vehicles..." className="bg-transparent outline-none w-full text-sm text-slate-900 dark:text-white" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+              </label>
+              <label className="flex items-center gap-2 border border-gray-200 dark:border-slate-600 p-2 rounded-lg bg-gray-50 dark:bg-slate-700">
+                <MapPin size={18} className="text-gray-400" />
+                <input type="text" placeholder="Search location..." className="bg-transparent outline-none w-full text-sm text-slate-900 dark:text-white" value={locationQuery} onChange={e => setLocationQuery(e.target.value)} />
+                <button onClick={detectLocation} className="text-gray-400 hover:text-slate-900 dark:hover:text-white transition" title="Use current location" type="button">
+                  <Navigation size={16} className="transform -rotate-45" />
+                </button>
+              </label>
+              <select className="border border-gray-200 dark:border-slate-600 p-2 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white outline-none text-sm" value={vehicleTypeFilter} onChange={(e) => setVehicleTypeFilter(e.target.value)}>
+                <option value="All">All Vehicle Types</option>
+                <option value="Bike">Bikes</option>
+                <option value="Car">Cars</option>
+                <option value="Scooter">Scooters</option>
+              </select>
+              <select className="border border-gray-200 dark:border-slate-600 p-2 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white outline-none text-sm" value={transmissionFilter} onChange={(e) => setTransmissionFilter(e.target.value)}>
+                <option value="All">All Transmissions</option>
+                <option value="Manual">Manual</option>
+                <option value="Automatic">Automatic</option>
+                <option value="CVT">CVT</option>
+              </select>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 text-slate-700 dark:text-slate-200 font-semibold text-sm shrink-0">
+                  <Filter size={18} /> Price
+                </div>
+                <input type="number" placeholder="Min" className="min-w-0 border border-gray-200 dark:border-slate-600 p-2 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white w-full" value={priceRange.min} onChange={e => setPriceRange({...priceRange, min: e.target.value})} />
+                <input type="number" placeholder="Max" className="min-w-0 border border-gray-200 dark:border-slate-600 p-2 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white w-full" value={priceRange.max} onChange={e => setPriceRange({...priceRange, max: e.target.value})} />
+              </div>
+              <select className="border border-gray-200 dark:border-slate-600 p-2 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white outline-none text-sm" value={fuelFilter} onChange={(e) => setFuelFilter(e.target.value)}>
+                <option value="All">All Fuels</option>
+                <option value="Petrol">Petrol</option>
+                <option value="Diesel">Diesel</option>
+                <option value="Electric">Electric</option>
+              </select>
+              <select className="border border-gray-200 dark:border-slate-600 p-2 rounded-lg bg-white dark:bg-slate-700 text-slate-900 dark:text-white outline-none text-sm" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
+                <option value="">Recommended</option>
+                <option value="lowToHigh">Price: Low to High</option>
+                <option value="highToLow">Price: High to Low</option>
+                <option value="distanceAsc">Distance: Nearest First</option>
+              </select>
+            </div>
+
+            {activeBrowseFilters.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {activeBrowseFilters.map(filter => (
+                  <button key={filter.label} onClick={filter.clear} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-700 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 transition">
+                    {filter.label} <X size={14} />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="hidden">
             <div className="flex items-center gap-2 border dark:border-slate-600 p-2 rounded w-full md:w-64 bg-gray-50 dark:bg-slate-700">
               <Search size={20} className="text-gray-400" />
               <input 
@@ -741,7 +923,7 @@ const UserDashboard = () => {
             </select>
           </div>
           
-          <div className="flex justify-end">
+          <div className="hidden">
             <div className="flex bg-gray-100 dark:bg-slate-700 p-1 rounded-lg">
               <button onClick={() => setViewMode('list')} className={`p-2 rounded-md transition ${viewMode === 'list' ? 'bg-white dark:bg-slate-600 shadow text-slate-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}>
                 <LayoutGrid size={20} />
@@ -752,7 +934,30 @@ const UserDashboard = () => {
             </div>
           </div>
 
-          {viewMode === 'list' ? (
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Showing <span className="font-bold text-slate-900 dark:text-white">{filteredVehicles.length}</span> available vehicles
+            </p>
+            <div className="flex bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 p-1 rounded-lg w-fit">
+              <button onClick={() => setViewMode('list')} className={`px-3 py-2 rounded-md transition flex items-center gap-2 text-sm ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`} title="Cards view">
+                <LayoutGrid size={18} /> Cards
+              </button>
+              <button onClick={() => setViewMode('map')} className={`px-3 py-2 rounded-md transition flex items-center gap-2 text-sm ${viewMode === 'map' ? 'bg-white dark:bg-slate-700 shadow text-slate-900 dark:text-white' : 'text-gray-500 dark:text-gray-400'}`} title="Map view">
+                <Map size={18} /> Map
+              </button>
+            </div>
+          </div>
+
+          {filteredVehicles.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 p-10 text-center">
+              <Search size={36} className="mx-auto text-gray-400 mb-3" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">No vehicles match these filters</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 mb-4">Try widening your price range, changing fuel type, or clearing the location search.</p>
+              <button onClick={resetBrowseFilters} className="inline-flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-lg font-semibold hover:bg-slate-800">
+                <RotateCcw size={16} /> Reset Filters
+              </button>
+            </div>
+          ) : viewMode === 'list' ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {filteredVehicles.map(v => (
             <div key={v.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-lg overflow-hidden border border-gray-100 dark:border-slate-700 relative group transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 cursor-pointer" onClick={() => openBooking(v)}>
@@ -769,21 +974,38 @@ const UserDashboard = () => {
               >
                 <ArrowRightLeft size={20} />
               </button>
-              <img src={v.img} alt={v.name} className="w-full h-48 object-cover" />
+              <div className="relative">
+                <img src={v.img} alt={v.name} className="w-full h-48 object-cover" />
+                <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/70 text-white px-2 py-1 rounded-md text-xs font-semibold">
+                  <Star size={13} className="fill-yellow-400 text-yellow-400" /> {v.rating}
+                </div>
+              </div>
               <div className="p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-bold bg-yellow-100 text-yellow-800 px-2 py-1 rounded uppercase">{v.type}</span>
                   <span className="text-lg font-bold text-slate-900 dark:text-white">₹{v.price}/day</span>
                 </div>
                 <h3 className="text-xl font-semibold mb-1 dark:text-white">{v.name}</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 flex items-center gap-1">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1">
                   <MapPin size={14}/> {v.location}
                   {userLocation && sortOrder === 'distanceAsc' && (
                     <span className="text-xs text-blue-600 ml-2">({calculateDistance(userLocation.lat, userLocation.lng, v.lat, v.lng).toFixed(1)} km)</span>
                   )}
                 </p>
-                <div className="w-full bg-slate-900 text-white py-2 rounded text-center font-semibold group-hover:bg-yellow-500 group-hover:text-slate-900 transition-colors">
-                  Book Now
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">{v.summary}</p>
+                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-300 mb-4">
+                  <span className="flex items-center gap-1 bg-gray-50 dark:bg-slate-700 px-2 py-1.5 rounded"><Fuel size={13} /> {v.fuel}</span>
+                  <span className="flex items-center gap-1 bg-gray-50 dark:bg-slate-700 px-2 py-1.5 rounded"><Gauge size={13} /> {v.transmission}</span>
+                  <span className="flex items-center gap-1 bg-gray-50 dark:bg-slate-700 px-2 py-1.5 rounded"><Users size={13} /> {v.seats} seats</span>
+                  <span className="flex items-center gap-1 bg-gray-50 dark:bg-slate-700 px-2 py-1.5 rounded">{v.mileage}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" className="border border-gray-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 py-2 rounded text-center font-semibold hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                    View Details
+                  </button>
+                  <button type="button" className="bg-slate-900 text-white py-2 rounded text-center font-semibold group-hover:bg-yellow-500 group-hover:text-slate-900 transition-colors">
+                    Book Now
+                  </button>
                 </div>
               </div>
             </div>
@@ -797,7 +1019,7 @@ const UserDashboard = () => {
                 style={{ border: 0 }}
                 loading="lazy"
                 allowFullScreen
-                src={`https://www.google.com/maps/embed/v1/search?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&q=${locationQuery || 'Dehradun'}+vehicle+rentals`}
+                src={DEHRADUN_MAP_EMBED_URL}
               ></iframe>
               <div className="absolute top-4 left-4 bottom-4 w-80 overflow-y-auto space-y-4 pr-2 pb-2">
                 {filteredVehicles.map(v => (
@@ -832,7 +1054,7 @@ const UserDashboard = () => {
               {weather ? (
                 <div className="flex items-center gap-8">
                   <div className="text-center">
-                    <span className="text-5xl font-bold">{weather.temp}°</span>
+                    <span className="text-5xl font-bold">{weather.temp}&deg;</span>
                     <p className="text-sm text-sky-100 font-medium">{weather.condition}</p>
                   </div>
                   <div className="flex gap-6 text-sm border-l border-white/20 pl-6">
@@ -859,7 +1081,7 @@ const UserDashboard = () => {
                 style={{ border: 0 }}
                 loading="lazy"
                 allowFullScreen
-                src={`https://www.google.com/maps/embed/v1/place?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&q=Dehradun,Uttarakhand`}
+                src={DEHRADUN_MAP_EMBED_URL}
               ></iframe>
             </div>
             <div className="mt-2 flex justify-between text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -883,7 +1105,7 @@ const UserDashboard = () => {
               </h3>
               <div className="flex gap-2">
                 <select 
-                  className="p-2 border rounded-lg text-sm outline-none bg-white dark:bg-slate-700 shadow-sm"
+                  className="p-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white shadow-sm"
                   value={foodCuisineFilter}
                   onChange={(e) => setFoodCuisineFilter(e.target.value)}
                 >
@@ -894,7 +1116,7 @@ const UserDashboard = () => {
                   <option value="Bakery">Bakery</option>
                 </select>
                 <select 
-                  className="p-2 border rounded-lg text-sm outline-none bg-white dark:bg-slate-700 shadow-sm"
+                  className="p-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white shadow-sm"
                   value={foodSort}
                   onChange={(e) => setFoodSort(e.target.value)}
                 >
@@ -909,7 +1131,7 @@ const UserDashboard = () => {
               Taste the authentic flavors of Dehradun at these legendary spots.
             </p>
             <div className="space-y-4">
-              {foodSpots.filter(spot => foodCuisineFilter === 'All' || spot.cuisine === foodCuisineFilter).sort((a, b) => {
+              {displayedFoodSpots.sort((a, b) => {
                 if (foodSort === 'ratingDesc') return b.rating - a.rating;
                 if (foodSort === 'ratingAsc') return a.rating - b.rating;
                 if (foodSort === 'distanceAsc') return parseFloat(a.distance) - parseFloat(b.distance);
@@ -918,25 +1140,25 @@ const UserDashboard = () => {
               }).map((spot, idx) => (
                 <div key={idx} className="flex items-center justify-between p-3 bg-orange-50 dark:bg-slate-700 rounded-lg border border-orange-100 dark:border-slate-600">
                   <div>
-                    <h4 className="font-bold text-slate-800">{spot.name}</h4>
-                    <p className="text-xs text-orange-700 font-medium">{spot.specialty}</p>
-                    <span className="text-xs text-gray-500">{spot.distance} away</span>
+                    <h4 className="font-bold text-slate-800 dark:text-white">{spot.name}</h4>
+                    <p className="text-xs text-orange-700 dark:text-orange-300 font-medium">{spot.specialty}</p>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{spot.distance} away</span>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <div className="flex items-center gap-1 bg-white px-2 py-1 rounded shadow-sm">
+                    <div className="flex items-center gap-1 bg-white dark:bg-slate-800 px-2 py-1 rounded shadow-sm">
                       <span className="text-yellow-500">★</span>
-                      <span className="font-bold text-sm">{spot.rating}</span>
+                      <span className="font-bold text-sm text-slate-900 dark:text-white">{spot.rating}</span>
                     </div>
                     <div className="flex gap-2">
                       <button 
                         onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(spot.name + " Dehradun")}`, '_blank')}
-                        className="text-xs bg-white text-orange-600 border border-orange-200 px-2 py-1 rounded hover:bg-orange-50 transition flex items-center gap-1"
+                        className="text-xs bg-white dark:bg-slate-800 text-orange-600 dark:text-orange-300 border border-orange-200 dark:border-orange-900 px-2 py-1 rounded hover:bg-orange-50 dark:hover:bg-slate-700 transition flex items-center gap-1"
                       >
                         <Navigation size={12} /> Directions
                       </button>
                       <button 
                         onClick={() => handleShare(spot)}
-                        className="text-xs bg-white text-green-600 border border-green-200 px-2 py-1 rounded hover:bg-green-50 transition flex items-center gap-1"
+                        className="text-xs bg-white dark:bg-slate-800 text-green-600 dark:text-green-300 border border-green-200 dark:border-green-900 px-2 py-1 rounded hover:bg-green-50 dark:hover:bg-slate-700 transition flex items-center gap-1"
                       >
                         <Share2 size={12} /> Share
                       </button>
@@ -944,6 +1166,11 @@ const UserDashboard = () => {
                   </div>
                 </div>
               ))}
+              {displayedFoodSpots.length === 0 && (
+                <div className="p-4 rounded-lg bg-gray-50 dark:bg-slate-700 text-sm text-gray-600 dark:text-gray-300">
+                  No nearby {foodCuisineFilter.toLowerCase()} places found yet. Try another cuisine or allow location access.
+                </div>
+              )}
             </div>
           </div>
 
@@ -955,7 +1182,7 @@ const UserDashboard = () => {
               </h3>
               <div className="flex gap-2">
                 <select 
-                  className="p-2 border rounded-lg text-sm outline-none bg-white dark:bg-slate-700 shadow-sm"
+                  className="p-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white shadow-sm"
                   value={touristTypeFilter}
                 onChange={(e) => {
                   setTouristTypeFilter(e.target.value);
@@ -969,7 +1196,7 @@ const UserDashboard = () => {
                   <option value="Spiritual">Spiritual</option>
                 </select>
                 <select 
-                  className="p-2 border rounded-lg text-sm outline-none bg-white dark:bg-slate-700 shadow-sm"
+                  className="p-2 border border-gray-200 dark:border-slate-600 rounded-lg text-sm outline-none bg-white text-slate-900 dark:bg-slate-700 dark:text-white shadow-sm"
                   value={touristSort}
                   onChange={(e) => setTouristSort(e.target.value)}
                 >

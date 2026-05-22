@@ -168,18 +168,25 @@ const Profile = () => {
               {user.role === 'seller' && (
                 <div className="md:col-span-2 bg-gray-50 dark:bg-slate-700 p-4 rounded-lg border dark:border-slate-600">
                   <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">Verification Status</h3>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-bold ${
-                      user.isVerified === 'verified' || user.isVerified === true 
-                        ? 'bg-green-100 text-green-700' 
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {user.isVerified === 'verified' || user.isVerified === true ? 'Verified' : 'Pending Verification'}
-                    </span>
-                    {user.isVerified === 'pending' && (
-                      <span className="text-xs text-gray-500 dark:text-gray-400">Documents uploaded and under review.</span>
-                    )}
-                  </div>
+                  {(() => {
+                    const status = user.dealer?.approvalStatus || (user.isVerified ? 'approved' : 'pending');
+                    const isApproved = status === 'approved';
+                    return (
+                      <div className="flex items-center gap-2">
+                        <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                          isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {isApproved ? 'Verified' : status === 'rejected' ? 'Rejected' : 'Pending Verification'}
+                        </span>
+                        {status === 'pending' && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Documents uploaded and under review.</span>
+                        )}
+                        {status === 'rejected' && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400">Your dealer profile was rejected. Contact support to update documents.</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>

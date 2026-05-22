@@ -1,16 +1,56 @@
 import { Response } from 'express';
 import { Booking } from '../models/Booking.model.js';
 import { Vehicle } from '../models/Vehicle.model.js';
+import { Notification } from '../models/Notification.model.js';
 import { AuthRequest } from '../types/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
+const startOfToday = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+};
+
+const isExpired = (value: Date | undefined) => {
+  if (!value) return false;
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date < startOfToday();
+};
+
+const deactivateExpiredVehicles = async () => {
+  const today = startOfToday();
+  await Vehicle.updateMany(
+    {
+      isActive: true,
+      $or: [
+        { insuranceExpiry: { $lt: today } },
+        { pollutionExpiry: { $lt: today } },
+      ],
+    },
+    { isActive: false }
+  );
+};
+
 export const createBooking = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { vehicleId, startDate, endDate, totalHours, totalAmount } = req.body;
+
+  await deactivateExpiredVehicles();
 
   const vehicle = await Vehicle.findById(vehicleId);
   if (!vehicle || !vehicle.isActive) {
     throw new ApiError(404, 'Vehicle not found or not available');
+  }
+
+  if (isExpired(vehicle.insuranceExpiry) || isExpired(vehicle.pollutionExpiry)) {
+    vehicle.isActive = false;
+    await vehicle.save();
+    throw new ApiError(400, 'Vehicle documents are expired and the vehicle is not bookable');
+  }
+
+  if (new Date(startDate) < startOfToday()) {
+    throw new ApiError(400, 'Booking start date cannot be in the past');
   }
 
   // Check for overlapping bookings
@@ -35,7 +75,17 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
     totalAmount,
   });
 
-  await booking.populate('vehicle', 'title type pricePerHour pricePerDay');
+  await booking.populate('vehicle', 'title type pricePerHour pricePerDay seller');
+  const populatedVehicle = booking.vehicle as any;
+
+  if (populatedVehicle && typeof populatedVehicle !== 'string') {
+    await Notification.create({
+      recipient: populatedVehicle.seller,
+      booking: booking._id,
+      type: 'booking_request',
+      message: `New booking request for ${populatedVehicle.title} from ${req.user?.name || 'a customer'}`,
+    });
+  }
 
   res.status(201).json({
     success: true,
@@ -46,7 +96,13 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
 
 export const getMyBookings = asyncHandler(async (req: AuthRequest, res: Response) => {
   const bookings = await Booking.find({ user: req.user!._id })
-    .populate('vehicle', 'title type images city pricePerHour pricePerDay')
+    .populate({
+      path: 'vehicle',
+      select: 'title type images city pricePerHour pricePerDay dealer',
+      populate: [
+        { path: 'dealer', select: 'shopName gstNumber' },
+      ],
+    })
     .sort({ createdAt: -1 });
 
   res.status(200).json({
@@ -55,9 +111,10 @@ export const getMyBookings = asyncHandler(async (req: AuthRequest, res: Response
   });
 });
 
+
 export const getBookingById = asyncHandler(async (req: AuthRequest, res: Response) => {
   const booking = await Booking.findById(req.params.id)
-    .populate('vehicle')
+    .populate('vehicle', '-rcDocument -insuranceDocument -pollutionDocument')
     .populate('user', 'name email mobile');
 
   if (!booking) {
@@ -79,6 +136,24 @@ export const getBookingById = asyncHandler(async (req: AuthRequest, res: Respons
   });
 });
 
+export const getVehicleBookings = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const vehicleId = req.params.vehicleId;
+  const today = startOfToday();
+
+  const bookings = await Booking.find({
+    vehicle: vehicleId,
+    bookingStatus: { $in: ['pending', 'confirmed'] },
+    endDate: { $gte: today },
+  })
+    .populate('user', 'name email')
+    .sort({ startDate: 1 });
+
+  res.status(200).json({
+    success: true,
+    bookings,
+  });
+});
+
 export const updateBookingStatus = asyncHandler(async (req: AuthRequest, res: Response) => {
   const { status } = req.body;
   
@@ -97,6 +172,31 @@ export const updateBookingStatus = asyncHandler(async (req: AuthRequest, res: Re
 
   booking.bookingStatus = status;
   await booking.save();
+
+  const bookedVehicle = booking.vehicle as any;
+
+  if (status === 'confirmed') {
+    await Notification.create({
+      recipient: booking.user,
+      booking: booking._id,
+      type: 'booking_confirmed',
+      message: `Your booking for ${bookedVehicle?.title || 'the vehicle'} has been approved.`,
+    });
+  } else if (status === 'rejected') {
+    await Notification.create({
+      recipient: booking.user,
+      booking: booking._id,
+      type: 'booking_cancelled',
+      message: `Your booking for ${bookedVehicle?.title || 'the vehicle'} was rejected by the dealer.`,
+    });
+  } else if (status === 'cancelled') {
+    await Notification.create({
+      recipient: booking.user,
+      booking: booking._id,
+      type: 'booking_cancelled',
+      message: `Your booking for ${bookedVehicle?.title || 'the vehicle'} was cancelled.`,
+    });
+  }
 
   res.status(200).json({
     success: true,

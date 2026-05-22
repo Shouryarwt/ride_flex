@@ -1,19 +1,52 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { authAPI } from './api/auth';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const getStoredUser = () => {
+    const sessionUser = sessionStorage.getItem('rideFlexUser');
+    const localUser = localStorage.getItem('rideFlexUser');
+    return sessionUser ? JSON.parse(sessionUser) : localUser ? JSON.parse(localUser) : null;
+  };
+
+  const sanitizeUser = (authUser) => {
+    if (!authUser) return null;
+    const { id, name, email, mobile, role, city, dlNumber, profilePic, isVerified, dealer } = authUser;
+    const safeUser = { id, name, email, mobile, role, city, dlNumber, profilePic, isVerified };
+
+    if (dealer) {
+      const { id: dealerId, _id, gstNumber, shopName, address, city: dealerCity, pincode, bankName, accountNo, ifsc, approvalStatus, isActive } = dealer;
+      safeUser.dealer = {
+        id: dealerId || _id,
+        gstNumber,
+        shopName,
+        address,
+        city: dealerCity,
+        pincode,
+        bankName,
+        accountNo,
+        ifsc,
+        approvalStatus,
+        isActive,
+      };
+    }
+
+    return safeUser;
+  };
+
   // User State: null or { name, role: 'user' | 'seller', ...details }
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem('rideFlexUser')) || null);
-  
-  // Persistent Database for All Users (to check uniqueness across sessions)
-  const [usersDB, setUsersDB] = useState(JSON.parse(localStorage.getItem('rideFlexUsersDB')) || []);
+  const [user, setUser] = useState(getStoredUser);
 
   // OTP State for simulation { identifier: '1234' }
   const [activeOTPs, setActiveOTPs] = useState({});
 
   // Dark Mode State
-  const [darkMode, setDarkMode] = useState(JSON.parse(localStorage.getItem('rideFlexDarkMode')) || false);
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('rideFlexDarkMode');
+    if (savedTheme !== null) return JSON.parse(savedTheme);
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches || false;
+  });
 
   useEffect(() => {
     localStorage.setItem('rideFlexDarkMode', JSON.stringify(darkMode));
@@ -24,79 +57,84 @@ export const AuthProvider = ({ children }) => {
     }
   }, [darkMode]);
 
-  useEffect(() => {
-    localStorage.setItem('rideFlexUser', JSON.stringify(user));
-  }, [user]);
+  const getStoredToken = () => sessionStorage.getItem('rideFlexToken') || localStorage.getItem('rideFlexToken');
 
-  useEffect(() => {
-    localStorage.setItem('rideFlexUsersDB', JSON.stringify(usersDB));
-  }, [usersDB]);
+  const persistAuth = (token, authUser, rememberMe = false) => {
+    const storage = rememberMe ? localStorage : sessionStorage;
+    const otherStorage = rememberMe ? sessionStorage : localStorage;
 
-  const login = (identifier, password, role) => {
-    const foundUser = usersDB.find(u => 
-      (u.email === identifier || u.mobile === identifier) && 
-      u.password === password && 
-      u.role === role
-    );
-    
-    if (foundUser) {
-      setUser(foundUser);
-      return { success: true };
-    }
-    return { success: false, message: "Invalid credentials or role mismatch." };
+    storage.setItem('rideFlexToken', token);
+    storage.setItem('rideFlexUser', JSON.stringify(authUser));
+    otherStorage.removeItem('rideFlexToken');
+    otherStorage.removeItem('rideFlexUser');
   };
 
-  const register = (formData, role) => {
-    // Check Email Uniqueness
-    if (usersDB.find(u => u.email === formData.email)) {
-      return { success: false, message: "Email already registered." };
-    }
-
-    // Check Mobile Uniqueness
-    if (formData.mobile && usersDB.find(u => u.mobile === formData.mobile)) {
-      return { success: false, message: "Mobile number already registered." };
-    }
-
-    // Critical Rule: Seller GST Check
-    if (role === 'seller') {
-      const existingGST = usersDB.find(u => u.role === 'seller' && u.gstNumber === formData.gstNumber);
-      if (existingGST) {
-        return { success: false, message: "A seller with this GST Number already exists." };
+  useEffect(() => {
+    const refreshUser = async () => {
+      const token = getStoredToken();
+      if (!token) return;
+      try {
+        const response = await authAPI.getProfile();
+        setUser(sanitizeUser(response.user));
+      } catch (error) {
+        console.error('Failed to refresh profile:', error);
+        localStorage.removeItem('rideFlexToken');
+        sessionStorage.removeItem('rideFlexToken');
+        setUser(null);
       }
-    }
-
-    const newUser = {
-      ...formData,
-      role,
-      isVerified: role === 'user' ? false : 'pending' // Sellers need Doc verification
     };
-    
-    setUsersDB([...usersDB, newUser]);
-    setUser(newUser);
-    return { success: true };
+
+    refreshUser();
+  }, []);
+
+  const login = async (identifier, password, role, rememberMe = false) => {
+    try {
+      const response = await authAPI.login({ identifier, password, role });
+      const { token, user: loggedUser } = response;
+      const safeUser = sanitizeUser(loggedUser);
+
+      persistAuth(token, safeUser, rememberMe);
+      setUser(safeUser);
+      return { success: true, user: safeUser };
+    } catch (error) {
+      console.error('Login error:', error);
+      const message = error?.response?.data?.message || error?.message || 'Login failed. Please try again.';
+      return { success: false, message };
+    }
+  };
+
+  const register = async (formData, role) => {
+    try {
+      const payload = { ...formData, role };
+      console.log('Registering with payload:', payload);
+      const response = await authAPI.register(payload);
+      const { token, user: registeredUser } = response;
+      const safeUser = sanitizeUser(registeredUser);
+
+      persistAuth(token, safeUser, true);
+      setUser(safeUser);
+      return { success: true, user: safeUser };
+    } catch (error) {
+      console.error('Register error:', error);
+      const message = error?.response?.data?.message || error?.message || 'Registration failed. Please try again.';
+      return { success: false, message };
+    }
   };
 
   const sendOTP = (identifier, role) => {
-    const userExists = usersDB.find(u => (u.email === identifier || u.mobile === identifier) && u.role === role);
-    if (!userExists) {
+    if (!user || (user.email !== identifier && user.mobile !== identifier) || user.role !== role) {
       return { success: false, message: "User not found with these details." };
     }
-    // Generate 4 digit OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
     setActiveOTPs(prev => ({ ...prev, [identifier]: otp }));
-    
-    // SIMULATION: Alert the OTP
     alert(`[RIDE FLEX SIMULATION]\nYour OTP is: ${otp}\n(Sent to ${identifier})`);
-    
     return { success: true };
   };
 
   const sendResetLink = (identifier, role) => {
-    const userExists = usersDB.find(u => (u.email === identifier || u.mobile === identifier) && u.role === role);
-    if (!userExists) {
+    if (!user || (user.email !== identifier && user.mobile !== identifier) || user.role !== role) {
       return { success: false, message: "User not found with these details." };
     }
-    // SIMULATION: Alert the Link
     alert(`[RIDE FLEX SIMULATION]\nPassword Reset Link sent to ${identifier}.\n\n(In a real app, check your email.)`);
     return { success: true };
   };
@@ -109,77 +147,84 @@ export const AuthProvider = ({ children }) => {
   };
 
   const resetPassword = (identifier, newPassword, role) => {
-    const userIndex = usersDB.findIndex(u => (u.email === identifier || u.mobile === identifier) && u.role === role);
-    if (userIndex > -1) {
-      const updatedDB = [...usersDB];
-      updatedDB[userIndex].password = newPassword;
-      setUsersDB(updatedDB);
-      
-      // Cleanup OTP
-      const newOTPs = { ...activeOTPs };
-      delete newOTPs[identifier];
-      setActiveOTPs(newOTPs);
-      
-      return { success: true };
+    if (!user || (user.email !== identifier && user.mobile !== identifier) || user.role !== role) {
+      return { success: false, message: "User not found with this email and role." };
     }
-    return { success: false, message: "User not found with this email and role." };
+
+    // This is a frontend simulation only for the current logged-in user.
+    setUser({ ...user, password: newPassword });
+    const newOTPs = { ...activeOTPs };
+    delete newOTPs[identifier];
+    setActiveOTPs(newOTPs);
+    return { success: true };
   };
 
-  const updateUser = (updatedData) => {
+  const updateUser = async (updatedData) => {
     if (!user) return { success: false, message: "No user logged in." };
 
-    const userIndex = usersDB.findIndex(u => (u.email === user.email || u.mobile === user.mobile) && u.role === user.role);
-    
-    if (userIndex > -1) {
-      const updatedDB = [...usersDB];
-      const updatedUserObj = { ...updatedDB[userIndex], ...updatedData };
-      updatedDB[userIndex] = updatedUserObj;
-      setUsersDB(updatedDB);
-      setUser(updatedUserObj);
-      return { success: true };
+    try {
+      const response = await authAPI.updateProfile(updatedData);
+      const updatedUser = sanitizeUser(response.user);
+      setUser(updatedUser);
+      if (localStorage.getItem('rideFlexToken')) {
+        localStorage.setItem('rideFlexUser', JSON.stringify(updatedUser));
+      } else if (sessionStorage.getItem('rideFlexToken')) {
+        sessionStorage.setItem('rideFlexUser', JSON.stringify(updatedUser));
+      }
+      return { success: true, user: updatedUser };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || error.message };
     }
-    return { success: false, message: "User record not found." };
   };
 
-  const changePassword = (currentPassword, newPassword) => {
+  const changePassword = async (currentPassword, newPassword) => {
     if (!user) return { success: false, message: "No user logged in." };
-    
-    if (user.password !== currentPassword) {
-      return { success: false, message: "Current password is incorrect." };
-    }
 
-    const userIndex = usersDB.findIndex(u => (u.email === user.email || u.mobile === user.mobile) && u.role === user.role);
-    if (userIndex > -1) {
-      const updatedDB = [...usersDB];
-      updatedDB[userIndex].password = newPassword;
-      setUsersDB(updatedDB);
-      setUser({ ...user, password: newPassword });
+    try {
+      await authAPI.changePassword({ currentPassword, newPassword });
       return { success: true };
+    } catch (error) {
+      return { success: false, message: error.response?.data?.message || error.message };
     }
-    return { success: false, message: "User record not found." };
   };
 
-  const deleteAccount = () => {
+  const deleteAccount = async () => {
     if (!user) return { success: false, message: "No user logged in." };
+    try {
+      const token = getStoredToken();
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/account`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token ? `Bearer ${token}` : '',
+        },
+      });
 
-    const userIndex = usersDB.findIndex(u => (u.email === user.email || u.mobile === user.mobile) && u.role === user.role);
-    
-    if (userIndex > -1) {
-      const updatedDB = usersDB.filter((_, index) => index !== userIndex);
-      setUsersDB(updatedDB);
+      if (!response.ok) {
+        const err = await response.json().catch(() => null);
+        return { success: false, message: err?.message || 'Failed to delete account' };
+      }
+
       logout();
+      window.location.href = '/auth';
       return { success: true };
+    } catch (e) {
+      return { success: false, message: e?.message || 'Failed to delete account' };
     }
-    return { success: false, message: "User record not found." };
+
   };
+
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('rideFlexUser');
+    localStorage.removeItem('rideFlexToken');
+    sessionStorage.removeItem('rideFlexUser');
+    sessionStorage.removeItem('rideFlexToken');
   };
 
   const toggleTheme = () => {
-    setDarkMode(!darkMode);
+    setDarkMode(prev => !prev);
   };
 
   return (

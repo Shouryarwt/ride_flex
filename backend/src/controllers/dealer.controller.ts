@@ -1,8 +1,17 @@
 import { Response } from 'express';
 import { Dealer } from '../models/Dealer.model.js';
+import { Vehicle } from '../models/Vehicle.model.js';
+import { User } from '../models/User.model.js';
 import { AuthRequest } from '../types/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+
+const sanitizeDealerForSeller = (dealer: any) => {
+  const data = dealer.toObject ? dealer.toObject() : { ...dealer };
+  delete data.idProof;
+  delete data.gstProof;
+  return data;
+};
 
 export const getDealerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
   const dealer = await Dealer.findOne({ user: req.user!._id }).populate('user', 'name email mobile');
@@ -13,12 +22,12 @@ export const getDealerProfile = asyncHandler(async (req: AuthRequest, res: Respo
 
   res.status(200).json({
     success: true,
-    dealer,
+    dealer: sanitizeDealerForSeller(dealer),
   });
 });
 
 export const updateDealerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { shopName, address, city, bankName, accountNo, ifsc } = req.body;
+  const { shopName, address, city, pincode, bankName, accountNo, ifsc } = req.body;
 
   const dealer = await Dealer.findOne({ user: req.user!._id });
 
@@ -26,13 +35,13 @@ export const updateDealerProfile = asyncHandler(async (req: AuthRequest, res: Re
     throw new ApiError(404, 'Dealer profile not found');
   }
 
-  Object.assign(dealer, { shopName, address, city, bankName, accountNo, ifsc });
+  Object.assign(dealer, { shopName, address, city, pincode, bankName, accountNo, ifsc });
   await dealer.save();
 
   res.status(200).json({
     success: true,
     message: 'Dealer profile updated successfully',
-    dealer,
+    dealer: sanitizeDealerForSeller(dealer),
   });
 });
 
@@ -68,6 +77,18 @@ export const approveDealerStatus = asyncHandler(async (req: AuthRequest, res: Re
 
   dealer.approvalStatus = status;
   await dealer.save();
+
+  const sellerUser = await User.findById(dealer.user);
+  if (sellerUser) {
+    sellerUser.isVerified = status === 'approved';
+    await sellerUser.save();
+  }
+
+  if (status === 'approved') {
+    await Vehicle.updateMany({ seller: dealer.user }, { isActive: true });
+  } else if (status === 'rejected') {
+    await Vehicle.updateMany({ seller: dealer.user }, { isActive: false });
+  }
 
   res.status(200).json({
     success: true,

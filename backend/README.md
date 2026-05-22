@@ -42,7 +42,7 @@ cp .env.example .env
 ```env
 NODE_ENV=development
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/ride-flex
+MONGODB_URI=mongodb://localhost:27017/ride_flex
 JWT_SECRET=your-secret-key
 JWT_EXPIRES_IN=7d
 CORS_ORIGIN=http://localhost:5173

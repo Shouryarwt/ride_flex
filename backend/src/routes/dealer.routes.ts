@@ -11,7 +11,7 @@ const router = Router();
 
 router.get('/profile', authenticate, authorize('seller'), getDealerProfile);
 router.put('/profile', authenticate, authorize('seller'), updateDealerProfile);
-router.get('/', getAllDealers);
+router.get('/', authenticate, authorize('admin'), getAllDealers);
 router.put('/:id/approve', authenticate, authorize('admin'), approveDealerStatus);
 
 export default router;

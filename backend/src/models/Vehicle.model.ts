@@ -27,6 +27,23 @@ const vehicleSchema = new Schema<IVehicle>(
       enum: ['bike', 'scooter', 'car'],
       required: [true, 'Vehicle type is required'],
     },
+    fuelType: {
+      type: String,
+      enum: ['Petrol', 'Diesel', 'Electric', 'CNG'],
+      required: [true, 'Fuel type is required'],
+      trim: true,
+    },
+    transmission: {
+      type: String,
+      enum: ['Manual', 'Automatic'],
+      required: [true, 'Transmission type is required'],
+      trim: true,
+    },
+    seatingCapacity: {
+      type: Number,
+      required: [true, 'Seating capacity is required'],
+      min: [1, 'Seating capacity must be at least 1'],
+    },
     engineSegment: {
       type: String,
       required: [true, 'Engine segment is required'],
@@ -37,10 +54,70 @@ const vehicleSchema = new Schema<IVehicle>(
       required: [true, 'City is required'],
       trim: true,
     },
-    images: [{
+    images: {
+      type: [{
+        type: String,
+        trim: true,
+      }],
+      validate: {
+        validator: (images: string[]) => Array.isArray(images) && images.length >= 4,
+        message: 'Front, back, right, and left vehicle images are required',
+      },
+    },
+    rcNumber: {
       type: String,
+      required: [true, 'RC number is required'],
+      uppercase: true,
       trim: true,
-    }],
+      match: [/^[A-Z0-9]{10}$/, 'RC number must be exactly 10 uppercase letters/numbers'],
+    },
+    insuranceStartDate: {
+      type: Date,
+      required: [true, 'Insurance start date is required'],
+    },
+    pollutionStartDate: {
+      type: Date,
+      required: [true, 'Pollution start date is required'],
+    },
+    rcDocument: {
+      type: String,
+    },
+    insuranceExpiry: {
+      type: Date,
+      required: [true, 'Insurance expiry date is required'],
+    },
+    insuranceDocument: {
+      type: String,
+    },
+    pollutionExpiry: {
+      type: Date,
+      required: [true, 'Pollution expiry date is required'],
+    },
+    pollutionDocument: {
+      type: String,
+    },
+    availableFrom: {
+      type: Date,
+    },
+    availableTo: {
+      type: Date,
+    },
+
+    weekendPrice: {
+      type: Number,
+      default: 0,
+      min: [0, 'Weekend price cannot be negative'],
+    },
+    holidayPrice: {
+      type: Number,
+      default: 0,
+      min: [0, 'Holiday price cannot be negative'],
+    },
+    minDuration: {
+      type: Number,
+      default: 1,
+      min: [1, 'Minimum duration must be at least 1 day'],
+    },
     pricePerHour: {
       type: Number,
       required: [true, 'Price per hour is required'],
@@ -60,6 +137,7 @@ const vehicleSchema = new Schema<IVehicle>(
       default: 0,
       min: [0, 'Delivery charge cannot be negative'],
     },
+
     isActive: {
       type: Boolean,
       default: true,

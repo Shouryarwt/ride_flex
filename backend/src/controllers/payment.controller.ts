@@ -1,12 +1,13 @@
 import { Response } from 'express';
 import { Payment } from '../models/Payment.model.js';
 import { Booking } from '../models/Booking.model.js';
+import { Notification } from '../models/Notification.model.js';
 import { AuthRequest } from '../types/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const createPayment = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { bookingId, amount, paymentMethod } = req.body;
+  const { bookingId, paymentMethod } = req.body;
 
   const booking = await Booking.findById(bookingId);
 
@@ -28,7 +29,7 @@ export const createPayment = asyncHandler(async (req: AuthRequest, res: Response
   const payment = await Payment.create({
     booking: bookingId,
     user: req.user!._id,
-    amount,
+    amount: booking.totalAmount,
     paymentMethod,
     transactionId,
     status: 'success', // In production, this would be updated by payment gateway callback
@@ -38,6 +39,14 @@ export const createPayment = asyncHandler(async (req: AuthRequest, res: Response
   booking.paymentStatus = 'paid';
   booking.bookingStatus = 'confirmed';
   await booking.save();
+
+  await booking.populate('vehicle', 'title');
+  await Notification.create({
+    recipient: booking.user,
+    booking: booking._id,
+    type: 'booking_confirmed',
+    message: `Your booking for ${booking.vehicle?.title || 'the vehicle'} has been confirmed.`,
+  });
 
   res.status(201).json({
     success: true,

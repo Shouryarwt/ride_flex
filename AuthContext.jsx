@@ -13,7 +13,11 @@ export const AuthProvider = ({ children }) => {
   const [activeOTPs, setActiveOTPs] = useState({});
 
   // Dark Mode State
-  const [darkMode, setDarkMode] = useState(JSON.parse(localStorage.getItem('rideFlexDarkMode')) || false);
+  const [darkMode, setDarkMode] = useState(() => {
+    const savedTheme = localStorage.getItem('rideFlexDarkMode');
+    if (savedTheme !== null) return JSON.parse(savedTheme);
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches || false;
+  });
 
   useEffect(() => {
     localStorage.setItem('rideFlexDarkMode', JSON.stringify(darkMode));
@@ -179,7 +183,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const toggleTheme = () => {
-    setDarkMode(!darkMode);
+    setDarkMode(prev => !prev);
   };
 
   return (

@@ -39,12 +39,22 @@ const Navbar = () => {
           ) : (
             <>
               <span className="text-gray-300">Welcome, {user.role === 'seller' ? user.shopName : user.name}</span>
-              {user.role === 'user' && (
-                 <Link to="/dashboard" className="hover:text-yellow-500">Browse Vehicles</Link>
-              )}
-              {user.role === 'seller' && (
-                 <Link to="/seller-dashboard" className="hover:text-yellow-500">Manage Inventory</Link>
-              )}
+              
+              <Link 
+                to={
+                  user.role === 'admin' ? '/admin-dashboard' :
+                  user.role === 'seller' ? '/seller-dashboard' :
+                  '/dashboard'
+                } 
+                className="hover:text-yellow-500"
+              >
+                {
+                  user.role === 'admin' ? 'Admin Dashboard' :
+                  user.role === 'seller' ? 'Manage Inventory' :
+                  'Browse Vehicles'
+                }
+              </Link>
+
               <Link to="/profile" className="hover:text-yellow-500 flex items-center gap-1">
                 <User size={18} /> Profile
               </Link>

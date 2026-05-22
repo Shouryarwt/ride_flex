@@ -53,12 +53,12 @@ const Auth = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isReset) {
       if (resetStep === 1) {
         // Step 1: Send Reset Link
-        const res = sendResetLink(formData.identifier, role);
+        const res = await sendResetLink(formData.identifier, role);
         if (res.success) setResetStep(2);
         else alert(res.message);
       } else if (resetStep === 2) {
@@ -70,7 +70,7 @@ const Auth = () => {
           alert("Passwords do not match!");
           return;
         }
-        const res = resetPassword(formData.identifier, formData.password, role);
+        const res = await resetPassword(formData.identifier, formData.password, role);
         if (res.success) {
           alert("Password Reset Successful! Please Login.");
           setIsReset(false);
@@ -83,9 +83,12 @@ const Auth = () => {
       }
     } else if (isLogin) {
       // Login with Identifier (Email or Mobile)
-      const res = login(formData.identifier, formData.password, role, rememberMe);
+      const res = await login(formData.identifier, formData.password, role, rememberMe);
       if (res.success) {
-        navigate(role === 'seller' ? '/seller-dashboard' : '/dashboard');
+        const actualRole = res.user?.role || role;
+        if (actualRole === 'admin') navigate('/admin-dashboard');
+        else if (actualRole === 'seller') navigate('/seller-dashboard');
+        else navigate('/dashboard');
       } else {
         alert(res.message);
       }
@@ -104,10 +107,13 @@ const Auth = () => {
           return;
         }
       }
-      const res = register(formData, role);
+      const res = await register(formData, role);
       if (res.success) {
         alert("Registration Successful!");
-        navigate(role === 'seller' ? '/seller-dashboard' : '/dashboard');
+        const actualRole = res.user?.role || role;
+        if (actualRole === 'admin') navigate('/admin-dashboard');
+        else if (actualRole === 'seller') navigate('/seller-dashboard');
+        else navigate('/dashboard');
       } else {
         alert(res.message);
       }

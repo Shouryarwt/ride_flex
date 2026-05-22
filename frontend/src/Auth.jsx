@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Navigation } from 'lucide-react';
+import { getCurrentLocationDetails } from './utils/location';
+
+const MAX_DOCUMENT_SIZE_MB = 10;
+const MAX_DOCUMENT_SIZE_BYTES = MAX_DOCUMENT_SIZE_MB * 1024 * 1024;
+const SELLER_DOCUMENT_FIELDS = ['idProof', 'gstProof'];
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -12,6 +17,7 @@ const Auth = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [locationLoading, setLocationLoading] = useState(false);
   const navigate = useNavigate();
 
   // Form States
@@ -19,7 +25,7 @@ const Auth = () => {
     email: '', password: '', confirmPassword: '', name: '', mobile: '',
     identifier: '', otp: '',
     // Seller Specific
-    gstNumber: '', shopName: '', address: '',
+    gstNumber: '', shopName: '', address: '', city: '', pincode: '',
     bankName: '', accountNo: '', ifsc: '',
     // User Specific
     dlNumber: '', profilePic: '',
@@ -38,27 +44,62 @@ const Auth = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const value = ['gstNumber', 'ifsc'].includes(e.target.name)
+      ? e.target.value.toUpperCase()
+      : e.target.value;
+
+    setFormData({ ...formData, [e.target.name]: value });
     if (e.target.name === 'password') setPasswordStrength(calculateStrength(e.target.value));
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    const { name } = e.target;
     if (file) {
+      if (SELLER_DOCUMENT_FIELDS.includes(name)) {
+        if (file.type !== 'application/pdf') {
+          alert('Seller documents must be uploaded as PDF files.');
+          e.target.value = '';
+          return;
+        }
+
+        if (file.size > MAX_DOCUMENT_SIZE_BYTES) {
+          alert(`Seller documents must be under ${MAX_DOCUMENT_SIZE_MB}MB.`);
+          e.target.value = '';
+          return;
+        }
+      }
+
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData((prev) => ({ ...prev, [e.target.name]: reader.result }));
+        setFormData((prev) => ({ ...prev, [name]: reader.result }));
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleUseLocation = async () => {
+    setLocationLoading(true);
+    try {
+      const location = await getCurrentLocationDetails();
+      setFormData((prev) => ({
+        ...prev,
+        city: location.city || prev.city,
+        pincode: location.pincode || prev.pincode,
+      }));
+    } catch (error) {
+      alert(error.message || 'Unable to fetch your location.');
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (isReset) {
       if (resetStep === 1) {
         // Step 1: Send Reset Link
-        const res = sendResetLink(formData.identifier, role);
+        const res = await sendResetLink(formData.identifier, role);
         if (res.success) setResetStep(2);
         else alert(res.message);
       } else if (resetStep === 2) {
@@ -70,7 +111,7 @@ const Auth = () => {
           alert("Passwords do not match!");
           return;
         }
-        const res = resetPassword(formData.identifier, formData.password, role);
+        const res = await resetPassword(formData.identifier, formData.password, role);
         if (res.success) {
           alert("Password Reset Successful! Please Login.");
           setIsReset(false);
@@ -83,9 +124,13 @@ const Auth = () => {
       }
     } else if (isLogin) {
       // Login with Identifier (Email or Mobile)
-      const res = login(formData.identifier, formData.password, role, rememberMe);
+      const res = await login(formData.identifier, formData.password, role, rememberMe);
       if (res.success) {
-        navigate(role === 'seller' ? '/seller-dashboard' : '/dashboard');
+        // Dynamically route based on the database role!
+        const actualRole = res.user?.role || role;
+        if (actualRole === 'admin') navigate('/admin-dashboard');
+        else if (actualRole === 'seller') navigate('/seller-dashboard');
+        else navigate('/dashboard');
       } else {
         alert(res.message);
       }
@@ -104,12 +149,17 @@ const Auth = () => {
           return;
         }
       }
-      const res = register(formData, role);
+      const res = await register(formData, role);
       if (res.success) {
         alert("Registration Successful!");
-        navigate(role === 'seller' ? '/seller-dashboard' : '/dashboard');
+        // Dynamically route based on the database role!
+        const actualRole = res.user?.role || role;
+        if (actualRole === 'admin') navigate('/admin-dashboard');
+        else if (actualRole === 'seller') navigate('/seller-dashboard');
+        else navigate('/dashboard');
       } else {
-        alert(res.message);
+        console.error('Registration failed:', res.message);
+        alert(res.message || 'Registration failed. Please check your details and try again.');
       }
     }
   };
@@ -254,6 +304,24 @@ const Auth = () => {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Business Address</label>
                 <textarea required name="address" onChange={handleChange} className="w-full p-2 border rounded mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
               </div>
+              <div>
+                <div className="flex items-center justify-between gap-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">City</label>
+                  <button
+                    type="button"
+                    onClick={handleUseLocation}
+                    disabled={locationLoading}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800 disabled:opacity-60"
+                  >
+                    <Navigation size={14} /> {locationLoading ? 'Detecting...' : 'Use location'}
+                  </button>
+                </div>
+                <input required name="city" type="text" value={formData.city} onChange={handleChange} className="w-full p-2 border rounded mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Pincode</label>
+                <input required name="pincode" type="text" inputMode="numeric" maxLength="6" value={formData.pincode} onChange={(e) => setFormData({ ...formData, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })} className="w-full p-2 border rounded mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+              </div>
               
               {/* Bank Details */}
               <div className="grid grid-cols-2 gap-4">
@@ -264,6 +332,7 @@ const Auth = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">IFSC Code</label>
                   <input required name="ifsc" type="text" onChange={handleChange} className="w-full p-2 border rounded mt-1 dark:bg-slate-700 dark:border-slate-600 dark:text-white" />
+                  <p className="text-xs text-gray-500 mt-1">Format: 4 letters + 0 + 6 alphanumeric characters (e.g. ABCD0123456)</p>
                 </div>
               </div>
               <div>
@@ -277,11 +346,13 @@ const Auth = () => {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Government ID Proof</label>
-                    <input required name="idProof" onChange={handleFileChange} type="file" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"/>
+                    <input required name="idProof" onChange={handleFileChange} type="file" accept="application/pdf,.pdf" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"/>
+                    <p className="text-xs text-gray-500 mt-1">PDF only, max 10MB.</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">GST Certificate / Shop License</label>
-                    <input required name="gstProof" onChange={handleFileChange} type="file" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"/>
+                    <input required name="gstProof" onChange={handleFileChange} type="file" accept="application/pdf,.pdf" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"/>
+                    <p className="text-xs text-gray-500 mt-1">PDF only, max 10MB.</p>
                   </div>
                 </div>
               </div>
