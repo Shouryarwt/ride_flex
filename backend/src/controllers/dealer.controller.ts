@@ -128,3 +128,49 @@ export const approveDealerStatus = asyncHandler(async (req: AuthRequest, res: Re
     dealer,
   });
 });
+
+export const verifyDealerOfficially = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { status, source, reference, notes } = req.body;
+
+  if (!['verified', 'rejected'].includes(status)) {
+    throw new ApiError(400, 'Verification status must be verified or rejected');
+  }
+
+  const allowedSources = [
+    'gst.gov.in',
+    'services.gst.gov.in',
+    'parivahan.gov.in',
+    'uidai.gov.in',
+  ];
+
+  if (!source || !allowedSources.some((domain) => String(source).toLowerCase().includes(domain))) {
+    throw new ApiError(
+      400,
+      'Verification source must be an authorised Government of India domain'
+    );
+  }
+
+  const dealer = await Dealer.findById(req.params.id);
+  if (!dealer) throw new ApiError(404, 'Dealer not found');
+
+  dealer.officialVerificationStatus = status;
+  dealer.officialVerificationCheckedAt = new Date();
+  dealer.officialVerificationSource = String(source);
+  dealer.officialVerificationReference = reference ? String(reference) : undefined;
+  dealer.officialVerificationNotes = notes ? String(notes) : undefined;
+
+  if (status === 'rejected') {
+    dealer.approvalStatus = 'rejected';
+    await Vehicle.updateMany({ seller: dealer.user }, { isActive: false });
+  }
+
+  await dealer.save();
+
+  res.status(200).json({
+    success: true,
+    message: status === 'verified'
+      ? 'Official government verification recorded'
+      : 'Official government verification rejected',
+    dealer: sanitizeDealerForSeller(dealer),
+  });
+});
