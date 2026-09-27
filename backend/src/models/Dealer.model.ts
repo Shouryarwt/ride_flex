@@ -74,7 +74,7 @@ const dealerSchema = new Schema<IDealer>(
   }
 );
 
-dealerSchema.index({ gstNumber: 1 });
+dealerSchema.index({ gstNumber: 1 }, { unique: true, name: 'dealer_gst_unique' });
 dealerSchema.index({ user: 1 });
 
 export const Dealer = mongoose.model<IDealer>('Dealer', dealerSchema);
