@@ -13,6 +13,7 @@ import VehicleDetails from './VehicleDetails';
 import Booking from './Booking';
 import DealerDashboard from './DealerDashboard';
 import DealerOnboarding from './DealerOnboarding';
+import VehicleOnboarding from './VehicleOnboarding';
 
 const ProtectedRoute = ({ children, allowedRole }) => {
   const { user } = useAuth();
@@ -33,6 +34,7 @@ function App() {
           <Route path="/booking" element={<Booking />} />
           <Route path="/dealer" element={<DealerDashboard />} />
           <Route path="/dealer/onboarding" element={<DealerOnboarding />} />
+          <Route path="/dealer/vehicles/new" element={<VehicleOnboarding />} />
           <Route path="/auth" element={<Auth />} />
           <Route 
             path="/dashboard" 
