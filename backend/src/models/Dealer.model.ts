@@ -32,6 +32,8 @@ const dealerSchema = new Schema<IDealer>(
       required: [true, 'City is required'],
       trim: true,
     },
+    state: { type: String, trim: true },
+
     pincode: {
       type: String,
       required: [true, 'Pincode is required'],
