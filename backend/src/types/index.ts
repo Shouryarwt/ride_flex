@@ -41,6 +41,7 @@ export interface IDealer extends Document {
   securityDeposit?: number;
   idProof?: string;
   gstProof?: string;
+  shopLicense?: string;
   approvalStatus: 'pending' | 'approved' | 'rejected';
   officialVerificationStatus?: 'pending' | 'verified' | 'rejected';
   officialVerificationCheckedAt?: Date;
