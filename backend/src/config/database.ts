@@ -1,29 +1,41 @@
 import mongoose from 'mongoose';
 
-export const connectDatabase = async (): Promise<void> => {
+let connectionPromise: Promise<typeof mongoose> | null = null;
+
+export const connectDatabase = async (): Promise<typeof mongoose> => {
+  if (mongoose.connection.readyState === 1) {
+    return mongoose;
+  }
+
+  if (connectionPromise) {
+    return connectionPromise;
+  }
+
+  const mongoUri = process.env.MONGODB_URI;
+  if (!mongoUri) {
+    throw new Error('MONGODB_URI is required');
+  }
+
+  connectionPromise = mongoose.connect(mongoUri, {
+    maxPoolSize: Number(process.env.MONGODB_MAX_POOL_SIZE || 10),
+    serverSelectionTimeoutMS: 5000,
+  });
+
   try {
-    const defaultDb = 'ride_flex';
-    const mongoUri = process.env.MONGODB_URI || `mongodb://localhost:27017/${defaultDb}`;
-    const connectOptions = {} as mongoose.ConnectOptions;
-
-    const usesRootUri = /^mongodb(?:\+srv)?:\/\/[\w.@-]+(?::\d+)?\/?$/.test(mongoUri);
-    if (usesRootUri) {
-      connectOptions.dbName = defaultDb;
-    }
-
-    await mongoose.connect(mongoUri, connectOptions);
-
-    console.log(`✅ MongoDB Connected: ${mongoose.connection.host}`);
+    const connection = await connectionPromise;
+    console.log(`MongoDB connected: ${mongoose.connection.host}`);
+    return connection;
   } catch (error) {
-    console.error('❌ MongoDB Connection Error:', error);
-    process.exit(1);
+    connectionPromise = null;
+    console.error('MongoDB connection error:', error);
+    throw error;
   }
 };
 
 mongoose.connection.on('disconnected', () => {
-  console.log('⚠️  MongoDB Disconnected');
+  console.warn('MongoDB disconnected');
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error('❌ MongoDB Error:', err);
+  console.error('MongoDB error:', err);
 });
