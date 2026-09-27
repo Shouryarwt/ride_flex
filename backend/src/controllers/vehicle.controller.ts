@@ -292,6 +292,38 @@ export const updateVehicle = asyncHandler(async (req: AuthRequest, res: Response
   });
 });
 
+export const reviewVehicle = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const { status, rejectionReason } = req.body;
+  if (!['approved', 'rejected'].includes(status)) {
+    throw new ApiError(400, 'Review status must be approved or rejected');
+  }
+
+  const vehicle = await Vehicle.findById(req.params.id);
+  if (!vehicle) throw new ApiError(404, 'Vehicle not found');
+
+  if (status === 'approved') {
+    const dealer = await Dealer.findById(vehicle.dealer);
+    if (!dealer || dealer.approvalStatus !== 'approved') {
+      throw new ApiError(409, 'Dealer must be approved before the vehicle can be published');
+    }
+    if (hasExpiredCompliance(vehicle)) {
+      throw new ApiError(409, 'Vehicle compliance documents are expired');
+    }
+    vehicle.verificationStatus = 'approved';
+    vehicle.rejectionReason = undefined;
+    vehicle.isActive = true;
+    vehicle.publishedAt = new Date();
+  } else {
+    vehicle.verificationStatus = 'rejected';
+    vehicle.rejectionReason = String(rejectionReason || 'Vehicle did not pass verification');
+    vehicle.isActive = false;
+    vehicle.publishedAt = undefined;
+  }
+
+  await vehicle.save();
+  res.status(200).json({ success: true, message: `Vehicle ${status}`, vehicle });
+});
+
 export const deleteVehicle = asyncHandler(async (req: AuthRequest, res: Response) => {
   const vehicle = await Vehicle.findOne({ 
     _id: req.params.id, 
