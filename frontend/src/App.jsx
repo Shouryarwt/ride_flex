@@ -8,6 +8,8 @@ import UserDashboard from './UserDashboard';
 import SellerDashboard from './SellerDashboard';
 import AdminDashboard from './AdminDashboard';
 import ProfileSettings from './ProfileSettings';
+import Explore from './Explore';
+import VehicleDetails from './VehicleDetails';
 
 const ProtectedRoute = ({ children, allowedRole }) => {
   const { user } = useAuth();
@@ -23,6 +25,8 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/explore" element={<Explore />} />
+          <Route path="/vehicles/:id" element={<VehicleDetails />} />
           <Route path="/auth" element={<Auth />} />
           <Route 
             path="/dashboard" 
