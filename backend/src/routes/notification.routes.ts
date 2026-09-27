@@ -5,14 +5,23 @@ import { getNotifications, markNotificationRead, markAllNotificationsRead } from
 
 const router = Router();
 
+router.get('/jobs/compliance', async (req, res, next) => {
+  try {
+    const secret = process.env.CRON_SECRET;
+    const authHeader = req.get('authorization') || '';
+    if (!secret || authHeader !== `Bearer ${secret}`) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+    await createComplianceNotifications();
+    return res.json({ success: true, message: 'Compliance notifications processed' });
+  } catch (error) {
+    return next(error);
+  }
+});
+
 router.use(authenticate);
 router.get('/', getNotifications);
 router.put('/:id/read', markNotificationRead);
 router.put('/read-all', markAllNotificationsRead);
-
-router.post('/jobs/compliance', authorize('admin'), async (_req, res, next) => {
-  try { await createComplianceNotifications(); res.json({ success: true, message: 'Compliance notifications processed' }); }
-  catch (error) { next(error); }
-});
 
 export default router;
