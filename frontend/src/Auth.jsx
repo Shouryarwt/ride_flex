@@ -129,7 +129,7 @@ const Auth = () => {
         // Dynamically route based on the database role!
         const actualRole = res.user?.role || role;
         if (actualRole === 'admin') navigate('/admin-dashboard');
-        else if (actualRole === 'seller') navigate('/seller-dashboard');
+        else if (actualRole === 'seller') navigate(isLogin ? '/dealer' : '/dealer/onboarding');
         else navigate('/dashboard');
       } else {
         alert(res.message);
