@@ -56,6 +56,29 @@ export default function VehicleOnboarding() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState(initialForm);
+  const [images, setImages] = useState([]);
+  const [documents, setDocuments] = useState({ rcDocument: '', insuranceDocument: '', pollutionDocument: '' });
+
+  const readFile = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleImages = async (event) => {
+    const files = Array.from(event.target.files || []).slice(0, 4);
+    const data = await Promise.all(files.map(readFile));
+    setImages(data);
+  };
+
+  const handleDocument = async (key, event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const data = await readFile(file);
+    setDocuments((current) => ({ ...current, [key]: data }));
+  };
 
   const set = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
@@ -86,9 +109,18 @@ export default function VehicleOnboarding() {
       return;
     }
 
+    if (step === 1 && images.length < 4) {
+      setError('Upload four vehicle photos: front, back, right and left.');
+      return;
+    }
+
     if (step === 2) {
       if (!form.insuranceExpiry || !form.pollutionExpiry) {
         setError('Insurance and pollution expiry dates are required.');
+        return;
+      }
+      if (!documents.rcDocument || !documents.insuranceDocument || !documents.pollutionDocument) {
+        setError('RC, insurance and pollution documents are required.');
         return;
       }
     }
@@ -108,6 +140,17 @@ export default function VehicleOnboarding() {
     try {
       const response = await vehicleAPI.createVehicle({
         ...form,
+        title: form.vehicleName,
+        rcNumber: form.registrationNumber,
+        images,
+        rcDocument: documents.rcDocument,
+        insuranceDocument: documents.insuranceDocument,
+        pollutionDocument: documents.pollutionDocument,
+        pricePerHour: Number(form.pricePerHour),
+        pricePerDay: Number(form.pricePerDay),
+        securityDeposit: Number(form.securityDeposit || 0),
+        lateReturnCharge: Number(form.lateReturnCharge || 0),
+        minDuration: Number(form.minRentalDuration || 1),
         complianceStatus: 'pending',
         verificationStatus: 'pending',
         publishStatus: 'pending',
@@ -261,12 +304,21 @@ export default function VehicleOnboarding() {
                   Upload clear front, rear, side and dashboard photos. Files
                   must be reviewed before a vehicle can be published.
                 </p>
-                <button
-                  type="button"
-                  className="mt-6 rounded-xl border border-white/10 px-5 py-3 text-sm"
-                >
-                  Choose photos
-                </button>
+                <label className="mt-6 inline-block rounded-xl border border-white/10 px-5 py-3 text-sm cursor-pointer">
+                  Choose 4 photos
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImages}
+                    className="hidden"
+                  />
+                </label>
+                {images.length > 0 && (
+                  <p className="mt-3 text-xs text-emerald-300">
+                    {images.length}/4 photos selected
+                  </p>
+                )}
               </div>
             )}
 
@@ -276,15 +328,27 @@ export default function VehicleOnboarding() {
                 {input('insuranceExpiry', 'Insurance expiry date', 'date')}
                 {input('pollutionStartDate', 'PUC start date', 'date')}
                 {input('pollutionExpiry', 'PUC expiry date', 'date')}
-                <div className="rounded-xl border border-dashed border-white/15 p-5 text-sm text-white/40">
-                  RC document upload — verification required
-                </div>
-                <div className="rounded-xl border border-dashed border-white/15 p-5 text-sm text-white/40">
-                  Insurance document upload — verification required
-                </div>
-                <div className="rounded-xl border border-dashed border-white/15 p-5 text-sm text-white/40">
-                  Pollution certificate upload — verification required
-                </div>
+                {[
+                  ['rcDocument', 'RC document'],
+                  ['insuranceDocument', 'Insurance document'],
+                  ['pollutionDocument', 'Pollution certificate'],
+                ].map(([key, label]) => (
+                  <label
+                    key={key}
+                    className="rounded-xl border border-dashed border-white/15 p-5 text-sm text-white/40 cursor-pointer"
+                  >
+                    {label} — PDF required
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={(event) => handleDocument(key, event)}
+                      className="mt-3 block w-full text-xs"
+                    />
+                    {documents[key] && (
+                      <span className="mt-2 block text-emerald-300">Document selected</span>
+                    )}
+                  </label>
+                ))}
                 <div className="md:col-span-2 rounded-xl border border-amber-300/20 bg-amber-300/5 p-4 text-sm text-amber-100/70">
                   Documents remain pending until the applicable official
                   verification source confirms them. A pending vehicle cannot
