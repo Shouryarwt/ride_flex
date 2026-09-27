@@ -6,7 +6,7 @@ import { getCurrentLocationDetails } from './utils/location';
 
 const MAX_DOCUMENT_SIZE_MB = 10;
 const MAX_DOCUMENT_SIZE_BYTES = MAX_DOCUMENT_SIZE_MB * 1024 * 1024;
-const SELLER_DOCUMENT_FIELDS = ['idProof', 'gstProof'];
+const SELLER_DOCUMENT_FIELDS = ['idProof', 'gstProof', 'shopLicense'];
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -30,7 +30,7 @@ const Auth = () => {
     // User Specific
     dlNumber: '', profilePic: '',
     // Documents
-    idProof: '', gstProof: ''
+    idProof: '', gstProof: '', shopLicense: ''
   });
 
   const calculateStrength = (pass) => {
@@ -352,6 +352,16 @@ const Auth = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">GST Certificate / Shop License</label>
                     <input required name="gstProof" onChange={handleFileChange} type="file" accept="application/pdf,.pdf" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"/>
+                    <p className="text-xs text-gray-500 mt-1">GST certificate only, PDF max 10MB.</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Shop / Trade License</label>
+                    <input required name="shopLicense" onChange={handleFileChange} type="file" accept="application/pdf,.pdf" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"/>
+                    <p className="text-xs text-gray-500 mt-1">PDF only, max 10MB.</p>
+                  </div>
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800 p-3 text-xs text-amber-800 dark:text-amber-200">
+                    Dealer registration is submitted as <strong>Pending verification</strong>. Ride Flex will not activate the dealer until the submitted GST, identity and shop documents have been checked against the applicable official Government of India source.
+                  </div>
                     <p className="text-xs text-gray-500 mt-1">PDF only, max 10MB.</p>
                   </div>
                 </div>
