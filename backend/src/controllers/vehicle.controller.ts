@@ -185,7 +185,8 @@ export const createVehicle = asyncHandler(async (req: AuthRequest, res: Response
     dealer: dealer._id,
     // Vehicles become bookable only after the dealer is approved.
     // (Customers see vehicles only when isActive === true)
-    isActive: dealer.approvalStatus === 'approved' && !hasExpiredCompliance(req.body),
+    isActive: false,
+    verificationStatus: 'pending',
   });
 
   res.status(201).json({
@@ -200,7 +201,7 @@ export const getVehicles = asyncHandler(async (req: AuthRequest, res: Response) 
 
   const { city, type, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
 
-  const query: any = { isActive: true };
+  const query: any = { isActive: true, verificationStatus: 'approved' };
 
   if (city) query.city = city;
   if (type) query.type = type;
@@ -237,7 +238,7 @@ export const getVehicles = asyncHandler(async (req: AuthRequest, res: Response) 
 export const getVehicleById = asyncHandler(async (req: AuthRequest, res: Response) => {
   await deactivateExpiredVehicles();
 
-  const vehicle = await Vehicle.findOne({ _id: req.params.id, isActive: true })
+  const vehicle = await Vehicle.findOne({ _id: req.params.id, isActive: true, verificationStatus: 'approved' })
     .select('-rcDocument -insuranceDocument -pollutionDocument')
     .populate('seller', 'name email mobile')
     .populate('dealer', 'shopName city address');
@@ -279,7 +280,9 @@ export const updateVehicle = asyncHandler(async (req: AuthRequest, res: Response
 
   Object.assign(vehicle, req.body);
   const dealer = await Dealer.findById(vehicle.dealer);
-  vehicle.isActive = dealer?.approvalStatus === 'approved' && !hasExpiredCompliance(vehicle);
+  vehicle.isActive = false;
+  vehicle.verificationStatus = 'pending';
+  vehicle.publishedAt = undefined;
   await vehicle.save();
 
   res.status(200).json({
