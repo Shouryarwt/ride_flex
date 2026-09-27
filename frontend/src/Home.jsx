@@ -35,7 +35,7 @@ export default function Home() {
               Discover verified two-wheelers and four-wheelers, reserve in minutes, and let Ride Flex turn every destination into your next experience.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
-              <Link to="/auth" className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-white text-black px-7 py-4 font-semibold hover:bg-amber-100 transition">
+              <Link to="/explore" className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-white text-black px-7 py-4 font-semibold hover:bg-amber-100 transition">
                 Explore the fleet <ArrowRight size={18} className="group-hover:translate-x-1 transition" />
               </Link>
               <Link to="/auth" className="inline-flex items-center justify-center gap-3 rounded-2xl border border-white/15 bg-white/[.04] px-7 py-4 font-semibold hover:bg-white/[.08] transition">
@@ -71,7 +71,7 @@ export default function Home() {
 
         <div className="grid md:grid-cols-2 gap-5">
           {fleet.map(({ title, copy, icon: Icon, tag }) => (
-            <Link key={title} to="/auth" className="group relative min-h-[330px] overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[.08] to-white/[.02] p-8">
+            <Link key={title} to="/explore" className="group relative min-h-[330px] overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[.08] to-white/[.02] p-8">
               <div className="absolute -right-12 -bottom-12 h-64 w-64 rounded-full bg-amber-400/10 blur-3xl group-hover:bg-amber-300/20 transition" />
               <div className="relative flex h-full flex-col justify-between">
                 <div className="flex items-start justify-between">
