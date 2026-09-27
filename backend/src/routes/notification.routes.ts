@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authenticate, authorize } from '../middleware/auth.middleware.js';
+import { authenticate } from '../middleware/auth.middleware.js';
 import { createComplianceNotifications } from '../services/complianceNotification.service.js';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../controllers/notification.controller.js';
 
