@@ -1,8 +1,13 @@
 import api from './axios';
 
 export const paymentAPI = {
-  createPayment: async (paymentData) => {
-    const response = await api.post('/payments', paymentData);
+  createOrder: async (bookingId) => {
+    const response = await api.post('/payments/order', { bookingId });
+    return response.data;
+  },
+
+  verifyPayment: async (payload) => {
+    const response = await api.post('/payments/verify', payload);
     return response.data;
   },
 
