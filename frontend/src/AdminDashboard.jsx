@@ -243,6 +243,28 @@ export default function AdminDashboard() {
                           </div>
                         </td>
                         <td className="p-4">
+                          <div className="flex flex-col gap-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold w-fit ${
+                              dealer.officialVerificationStatus === 'verified'
+                                ? 'bg-emerald-100 text-emerald-700'
+                                : 'bg-orange-100 text-orange-700'
+                            }`}>
+                              {dealer.officialVerificationStatus === 'verified'
+                                ? 'Gov verified'
+                                : 'Gov check pending'}
+                            </span>
+                            {dealer.officialVerificationStatus !== 'verified' && (
+                              <button
+                                type="button"
+                                onClick={() => handleOfficialVerification(id)}
+                                className="text-xs text-blue-600 hover:underline text-left"
+                              >
+                                Record official check
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4">
                           <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                             isApproved ? 'bg-green-100 text-green-700' : isRejected ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                           }`}>
