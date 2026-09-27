@@ -17,7 +17,7 @@ export default function Navbar() {
 
   const unread = notifications.filter((n) => !n.read).length;
   const go = (path) => { setOpen(false); navigate(path); };
-  const dashboard = user?.role === 'seller' ? '/seller-dashboard' : user?.role === 'admin' ? '/admin-dashboard' : '/dashboard';
+  const dashboard = user?.role === 'seller' ? '/dealer' : user?.role === 'admin' ? '/admin-dashboard' : '/dashboard';
 
   return (
     <nav className="fixed top-0 inset-x-0 z-50 border-b border-white/10 bg-[#08090b]/80 backdrop-blur-xl">
