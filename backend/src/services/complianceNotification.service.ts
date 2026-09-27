@@ -25,11 +25,12 @@ export const createComplianceNotifications = async () => {
       const expiry = (vehicle as any)[check.field] as Date | undefined;
       if (!expiry) continue;
       const days = Math.ceil((new Date(expiry).setHours(0,0,0,0) - today.getTime()) / DAY_MS);
-      if (days > 10) continue;
+      // Notify exactly 10 days before expiry, and once per day after expiry.
+      if (days !== 10 && days >= 0) continue;
       const type = days < 0 ? 'compliance_expired' as const : check.type;
       const message = days < 0
         ? `${check.label} for ${vehicle.title} has expired. Renew it to keep the vehicle compliant.`
-        : `${check.label} for ${vehicle.title} expires in ${days} day(s). Please arrange renewal.`;
+        : `${check.label} for ${vehicle.title} expires in 10 days. Please arrange renewal.`;
       const since = new Date(today.getTime() - DAY_MS);
       const exists = await Notification.findOne({ recipient: vehicle.seller, vehicle: vehicle._id, type, createdAt: { $gte: since } });
       if (!exists) await Notification.create({ recipient: vehicle.seller, vehicle: vehicle._id, type, message });
