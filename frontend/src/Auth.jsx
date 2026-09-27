@@ -350,7 +350,7 @@ const Auth = () => {
                     <p className="text-xs text-gray-500 mt-1">PDF only, max 10MB.</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">GST Certificate / Shop License</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">GST Certificate</label>
                     <input required name="gstProof" onChange={handleFileChange} type="file" accept="application/pdf,.pdf" className="block w-full text-sm text-slate-500 dark:text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-700 hover:file:bg-slate-300"/>
                     <p className="text-xs text-gray-500 mt-1">GST certificate only, PDF max 10MB.</p>
                   </div>
