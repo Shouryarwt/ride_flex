@@ -70,6 +70,53 @@ export default function AdminDashboard() {
     }
   };
 
+
+  const handleOfficialVerification = async (id) => {
+    const source = window.prompt(
+      'Government source domain (e.g. https://services.gst.gov.in/):',
+      'https://services.gst.gov.in/'
+    );
+    if (!source) return;
+
+    const reference = window.prompt(
+      'Official verification reference / result URL (optional):',
+      ''
+    );
+
+    try {
+      const token = localStorage.getItem('rideFlexToken') || sessionStorage.getItem('rideFlexToken');
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/dealers/${id}/official-verification`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            status: 'verified',
+            source,
+            reference,
+            notes: 'Documents checked against the applicable official Government of India source.',
+          }),
+        }
+      );
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Official verification failed');
+
+      setDealers((current) =>
+        current.map((dealer) =>
+          dealer._id === id || dealer.id === id
+            ? { ...dealer, officialVerificationStatus: 'verified', officialVerificationCheckedAt: new Date().toISOString() }
+            : dealer
+        )
+      );
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleStatusUpdate = async (id, status) => {
     if (status === 'rejected' && !window.confirm('Are you sure you want to reject this dealer?')) {
       return;
@@ -148,6 +195,7 @@ export default function AdminDashboard() {
                   <th className="p-4 font-bold">Location</th>
                   <th className="p-4 font-bold">GST</th>
                   <th className="p-4 font-bold">Documents</th>
+                  <th className="p-4 font-bold">Verification</th>
                   <th className="p-4 font-bold">Status</th>
                   <th className="p-4 font-bold">Actions</th>
                 </tr>
@@ -155,7 +203,7 @@ export default function AdminDashboard() {
               <tbody className="divide-y divide-gray-100">
                 {dealers.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="p-8 text-center text-gray-500">No dealers found.</td>
+                    <td colSpan="8" className="p-8 text-center text-gray-500">No dealers found.</td>
                   </tr>
                 ) : (
                   dealers.map((dealer) => {
