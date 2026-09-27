@@ -42,4 +42,9 @@ export interface IDealer extends Document {
   idProof?: string;
   gstProof?: string;
   approvalStatus: 'pending' | 'approved' | 'rejected';
+  officialVerificationStatus?: 'pending' | 'verified' | 'rejected';
+  officialVerificationCheckedAt?: Date;
+  officialVerificationSource?: string;
+  officialVerificationReference?: string;
+  officialVerificationNotes?: string;
 }
