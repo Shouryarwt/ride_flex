@@ -39,7 +39,7 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
   await deactivateExpiredVehicles();
 
   const vehicle = await Vehicle.findById(vehicleId);
-  if (!vehicle || !vehicle.isActive) {
+  if (!vehicle || !vehicle.isActive || vehicle.verificationStatus !== 'approved') {
     throw new ApiError(404, 'Vehicle not found or not available');
   }
 
@@ -49,8 +49,18 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
     throw new ApiError(400, 'Vehicle documents are expired and the vehicle is not bookable');
   }
 
-  if (new Date(startDate) < startOfToday()) {
+  const requestedStart = new Date(startDate);
+  const requestedEnd = new Date(endDate);
+  if (Number.isNaN(requestedStart.getTime()) || Number.isNaN(requestedEnd.getTime()) || requestedEnd <= requestedStart) {
+    throw new ApiError(400, 'Invalid booking date range');
+  }
+
+  if (requestedStart < new Date()) {
     throw new ApiError(400, 'Booking start date cannot be in the past');
+  }
+
+  if (Number(totalHours) <= 0 || Number(totalAmount) < 0) {
+    throw new ApiError(400, 'Invalid booking amount or duration');
   }
 
   // Check for overlapping bookings
