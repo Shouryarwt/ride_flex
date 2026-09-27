@@ -155,7 +155,7 @@ const Auth = () => {
         // Dynamically route based on the database role!
         const actualRole = res.user?.role || role;
         if (actualRole === 'admin') navigate('/admin-dashboard');
-        else if (actualRole === 'seller') navigate('/seller-dashboard');
+        else if (actualRole === 'seller') navigate('/dealer/onboarding');
         else navigate('/dashboard');
       } else {
         console.error('Registration failed:', res.message);
