@@ -48,11 +48,7 @@ const bookingSchema = new Schema<IBooking>(
       enum: ['pending', 'confirmed', 'cancelled', 'rejected', 'completed'],
       default: 'pending',
     },
-    paymentStatus: {
-      type: String,
-      enum: ['unpaid', 'paid'],
-      default: 'unpaid',
-    },
+
   },
   { 
     timestamps: true,
