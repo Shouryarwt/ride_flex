@@ -69,7 +69,13 @@ export interface IBooking extends Document {
   totalHours: number;
   totalAmount: number;
   bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'rejected' | 'completed';
-  paymentStatus: 'unpaid' | 'paid';
+  paymentStatus: 'pending' | 'authorized' | 'paid' | 'failed' | 'refunded';
+  paymentProvider?: 'razorpay' | 'phonepe';
+  paymentOrderId?: string;
+  paymentTransactionId?: string;
+  platformFee?: number;
+  deliveryFee?: number;
+  securityDeposit?: number;
 }
 
 export interface IPayment extends Document {
