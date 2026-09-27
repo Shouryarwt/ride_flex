@@ -768,7 +768,12 @@ const UserDashboard = () => {
       closeBooking();
 
       alert(`Payment confirmed!\nVehicle: ${bookingModal.vehicle.name}\nDates: ${bookingDates.start} to ${bookingDates.end}`);
+    } catch (err) {
+      console.error(err);
+      const message = err?.response?.data?.message || err?.message || 'Unable to create booking or complete payment.';
+      alert(message);
     }
+  };
 
   const handleCancelBooking = async (id) => {
     if (!window.confirm("Are you sure you want to cancel this booking?")) return;
