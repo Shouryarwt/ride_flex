@@ -60,7 +60,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 lg:px-10 py-24">
+      <section id="fleet" className="max-w-7xl mx-auto px-6 lg:px-10 py-24">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10">
           <div>
             <p className="text-xs uppercase tracking-[.25em] text-amber-300">Choose your way</p>
@@ -93,7 +93,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-white/[.025]">
+      <section id="experience" className="border-y border-white/10 bg-white/[.025]">
         <div className="max-w-7xl mx-auto px-6 lg:px-10 py-24 grid lg:grid-cols-[1.1fr_.9fr] gap-14 items-center">
           <div>
             <p className="text-xs uppercase tracking-[.25em] text-amber-300">More than a rental</p>
