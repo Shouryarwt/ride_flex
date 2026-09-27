@@ -361,10 +361,8 @@ const Auth = () => {
                   </div>
                   <div className="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/10 dark:border-amber-800 p-3 text-xs text-amber-800 dark:text-amber-200">
                     Dealer registration is submitted as <strong>Pending verification</strong>. Ride Flex will not activate the dealer until the submitted GST, identity and shop documents have been checked against the applicable official Government of India source.
-                  </div>
-                    <p className="text-xs text-gray-500 mt-1">PDF only, max 10MB.</p>
-                  </div>
                 </div>
+              </div>
               </div>
             </>
           )}
