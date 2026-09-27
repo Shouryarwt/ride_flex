@@ -1,0 +1,23 @@
+import React,{useEffect,useState} from 'react';
+import {Link} from 'react-router-dom';
+import {Building2,CheckCircle2,Clock3,Plus,ShieldCheck,WalletCards,CarFront,CalendarCheck,ArrowUpRight} from 'lucide-react';
+import {useAuth} from './AuthContext';
+import {dealerAPI} from './api/dealers';
+import {vehicleAPI} from './api/vehicles';
+import {bookingAPI} from './api/bookings';
+
+export default function DealerDashboard(){
+ const {user}=useAuth();
+ const [dealer,setDealer]=useState(null),[vehicles,setVehicles]=useState([]),[bookings,setBookings]=useState([]),[loading,setLoading]=useState(true);
+ useEffect(()=>{Promise.allSettled([dealerAPI.getDealerProfile(),vehicleAPI.getMyVehicles(),bookingAPI.getSellerBookings()]).then(([d,v,b])=>{if(d.status==='fulfilled')setDealer(d.value.dealer||d.value);if(v.status==='fulfilled')setVehicles(v.value.vehicles||[]);if(b.status==='fulfilled')setBookings(b.value.bookings||[])}).finally(()=>setLoading(false))},[]);
+ const pending=bookings.filter(b=>!['confirmed','cancelled','rejected'].includes(b.bookingStatus)).length;
+ const revenue=bookings.filter(b=>b.bookingStatus==='confirmed').reduce((s,b)=>s+Number(b.totalAmount||0),0);
+ const status=dealer?.verificationStatus||dealer?.status||'pending';
+ const cards=[['Fleet',vehicles.length,CarFront],['Pending bookings',pending,CalendarCheck],['Confirmed revenue',`₹${revenue.toLocaleString('en-IN')}`,WalletCards],['Verification',status,ShieldCheck]];
+ return <main className="min-h-screen pt-24 pb-20 bg-[#08090b] text-white"><div className="max-w-7xl mx-auto px-6 lg:px-10">
+ <div className="flex flex-col md:flex-row md:items-end justify-between gap-5"><div><p className="text-xs uppercase tracking-[.25em] text-amber-300">Partner Console</p><h1 className="mt-2 text-4xl md:text-5xl font-semibold">Good to see you, {user?.name?.split(' ')[0]||'Partner'}.</h1><p className="mt-3 text-white/40">Run your rental business from one place.</p></div><Link to="/seller-dashboard" className="rounded-xl bg-white text-black px-5 py-3 font-semibold"><Plus size={17} className="inline mr-2"/>Manage inventory</Link></div>
+ <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">{cards.map(([label,value,I])=><div key={label} className="rounded-2xl border border-white/10 bg-white/[.035] p-5"><I size={19} className="text-amber-300"/><p className="mt-5 text-xs uppercase tracking-wider text-white/35">{label}</p><p className="mt-1 text-2xl font-semibold capitalize">{value}</p></div>)}</div>
+ <div className="mt-7 grid lg:grid-cols-[1fr_360px] gap-5"><section className="rounded-[2rem] border border-white/10 bg-white/[.035] p-6"><div className="flex justify-between items-center"><div><h2 className="text-xl font-semibold">Recent booking requests</h2><p className="text-sm text-white/35 mt-1">Respond quickly to keep your vehicles moving.</p></div><Link to="/seller-dashboard" className="text-sm text-amber-300">Open requests <ArrowUpRight size={15} className="inline"/></Link></div><div className="mt-6 space-y-3">{loading?<p className="text-white/35">Loading partner data…</p>:bookings.slice(0,5).map(b=><div key={b._id} className="rounded-xl border border-white/10 p-4 flex justify-between gap-4"><div><p className="font-medium">{b.vehicle?.title||'Vehicle'}</p><p className="text-xs text-white/40 mt-1">{b.user?.name||'Customer'} · {new Date(b.startDate).toLocaleDateString()} → {new Date(b.endDate).toLocaleDateString()}</p></div><span className="text-sm text-amber-300 capitalize">{b.bookingStatus||'pending'}</span></div>)}{!loading&&!bookings.length&&<p className="text-white/30 py-8 text-center">No booking requests yet.</p>}</div></section>
+ <aside className="rounded-[2rem] border border-white/10 bg-gradient-to-b from-amber-300/10 to-white/[.03] p-6"><Building2 className="text-amber-300"/><h2 className="mt-5 text-xl font-semibold">Business verification</h2><p className="mt-2 text-sm text-white/40">A verified profile builds trust and unlocks marketplace visibility.</p><div className="mt-6 rounded-xl bg-black/20 p-4"><div className="flex items-center gap-3">{status==='verified'?<CheckCircle2 className="text-emerald-300"/>:<Clock3 className="text-amber-300" />}<div><p className="text-sm font-medium capitalize">{status}</p><p className="text-xs text-white/35">{dealer?.gstNumber?'GST details submitted':'Complete your legal details'}</p></div></div></div><Link to="/profile" className="mt-4 block text-center rounded-xl border border-white/10 py-3 text-sm">Review business profile</Link></aside></div>
+ </div></main>;
+}
