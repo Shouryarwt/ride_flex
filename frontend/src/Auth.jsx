@@ -165,7 +165,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4 transition-colors duration-300">
+    <div className="pt-20 min-h-screen bg-slate-100 dark:bg-slate-900 flex items-center justify-center p-4 transition-colors duration-300">
       <div className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-2xl w-full max-w-lg transition-colors duration-300">
         <h2 className="text-3xl font-bold text-center mb-6 text-slate-800 dark:text-white">
           {isReset ? (resetStep === 1 ? 'Reset Password' : resetStep === 2 ? 'Link Sent' : 'New Password') : (isLogin ? 'Welcome Back' : 'Join Ride Flex')}
