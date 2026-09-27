@@ -245,7 +245,7 @@ CORS_ORIGIN=http://localhost:5173
 ### Frontend (.env)
 ```env
 VITE_API_URL=http://localhost:5000/api
-VITE_GOOGLE_MAPS_API_KEY=AIzaSyDbAbJhBIgVy1RuTPg-o33QcbgdkeZTYC8
+VITE_GOOGLE_MAPS_API_KEY=your-google-maps-api-key
 ```
 
 ## Next Steps
