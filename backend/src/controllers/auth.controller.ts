@@ -55,7 +55,7 @@ const validatePdfDocument = (document: string | undefined, label: string) => {
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const { 
     name, email, mobile, password, role, city, dlNumber, profilePic,
-    gstNumber, shopName, address, pincode, bankName, accountNo, ifsc, idProof, gstProof 
+    gstNumber, shopName, address, pincode, bankName, accountNo, ifsc, idProof, gstProof, shopLicense 
   } = req.body;
 
   // Basic validation
@@ -80,7 +80,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     }
 
     validatePdfDocument(idProof, 'Government ID proof');
-    validatePdfDocument(gstProof, 'GST certificate / shop license');
+    validatePdfDocument(gstProof, 'GST certificate');
+    validatePdfDocument(shopLicense, 'Shop / trade license');
   }
 
   // Check if user already exists
