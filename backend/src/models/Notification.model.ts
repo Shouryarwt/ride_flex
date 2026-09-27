@@ -15,7 +15,7 @@ const notificationSchema = new Schema<INotification>(
     },
     type: {
       type: String,
-      enum: ['booking_request', 'booking_confirmed', 'booking_cancelled'],
+      enum: ['booking_request', 'booking_confirmed', 'booking_cancelled', 'insurance_expiring', 'pollution_expiring', 'compliance_expired'],
       required: true,
     },
     message: {
