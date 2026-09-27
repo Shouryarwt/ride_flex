@@ -21,10 +21,6 @@ dotenv.config();
 
 export const app = express();
 
-if (process.env.NODE_ENV !== 'test') {
-  void connectDatabase();
-}
-
 const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
   .split(',')
   .map((origin) => origin.trim())
@@ -47,6 +43,17 @@ const limiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
 });
 app.use('/api/', limiter);
+
+if (process.env.NODE_ENV !== 'test') {
+  app.use('/api', async (_req, _res, next) => {
+    try {
+      await connectDatabase();
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
+}
 
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
