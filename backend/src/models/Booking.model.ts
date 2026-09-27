@@ -26,6 +26,18 @@ const bookingSchema = new Schema<IBooking>(
       required: [true, 'Total hours is required'],
       min: [1, 'Booking must be at least 1 hour'],
     },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'authorized', 'paid', 'failed', 'refunded'],
+      default: 'pending',
+      index: true,
+    },
+    paymentProvider: { type: String, enum: ['razorpay', 'phonepe'], default: 'razorpay' },
+    paymentOrderId: { type: String, trim: true },
+    paymentTransactionId: { type: String, trim: true },
+    platformFee: { type: Number, min: 0, default: 0 },
+    deliveryFee: { type: Number, min: 0, default: 0 },
+    securityDeposit: { type: Number, min: 0, default: 0 },
     totalAmount: {
       type: Number,
       required: [true, 'Total amount is required'],
