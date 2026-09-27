@@ -27,7 +27,13 @@ export const getDealerProfile = asyncHandler(async (req: AuthRequest, res: Respo
 });
 
 export const updateDealerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { shopName, address, city, pincode, bankName, accountNo, ifsc, serviceRadius, deliveryAvailable, deliveryChargePerKm, openingTime, closingTime, businessType, ownerName, panNumber } = req.body;
+  const {
+    shopName, address, street, area, city, state, pincode,
+    bankName, accountNo, accountNumber, accountHolder, ifsc, upi,
+    serviceRadius, deliveryAvailable, deliveryChargePerKm,
+    openingTime, closingTime, businessType, ownerName, panNumber,
+    pricePerDay, securityDeposit,
+  } = req.body;
 
   const dealer = await Dealer.findOne({ user: req.user!._id });
 
@@ -35,7 +41,33 @@ export const updateDealerProfile = asyncHandler(async (req: AuthRequest, res: Re
     throw new ApiError(404, 'Dealer profile not found');
   }
 
-  Object.assign(dealer, { shopName, address, city, pincode, bankName, accountNo, ifsc, serviceRadius, deliveryAvailable, deliveryChargePerKm, openingTime, closingTime, businessType, ownerName, panNumber });
+  const combinedAddress = address || [street, area, city, state, pincode].filter(Boolean).join(', ');
+
+  Object.assign(dealer, {
+    shopName,
+    address: combinedAddress || dealer.address,
+    street,
+    area,
+    city,
+    state,
+    pincode,
+    bankName,
+    accountNo: accountNumber || accountNo,
+    accountHolder,
+    ifsc,
+    upi,
+    serviceRadius,
+    deliveryAvailable,
+    deliveryChargePerKm,
+    openingTime,
+    closingTime,
+    businessType,
+    ownerName,
+    panNumber,
+    pricePerDay,
+    securityDeposit,
+  });
+
   await dealer.save();
 
   res.status(200).json({
