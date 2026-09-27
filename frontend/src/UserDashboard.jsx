@@ -717,25 +717,58 @@ const UserDashboard = () => {
       });
 
       const createdBooking = bookingResponse.booking;
-      await paymentAPI.createPayment({
-        bookingId: createdBooking._id,
-        amount: totalPrice,
-        paymentMethod: normalizePaymentMethod(paymentMethod),
+      const orderResponse = await paymentAPI.createOrder(createdBooking._id);
+
+      const loadRazorpay = () => new Promise((resolve, reject) => {
+        if (window.Razorpay) return resolve(true);
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.onload = () => resolve(true);
+        script.onerror = () => reject(new Error('Unable to load Razorpay checkout'));
+        document.body.appendChild(script);
       });
+
+      await loadRazorpay();
+
+      await new Promise((resolve, reject) => {
+        const checkout = new window.Razorpay({
+          key: orderResponse.order.keyId,
+          amount: orderResponse.order.amount,
+          currency: orderResponse.order.currency,
+          name: 'Ride Flex',
+          description: `Rental booking — ${bookingModal.vehicle.name}`,
+          order_id: orderResponse.order.id,
+          prefill: {
+            name: localStorage.getItem('userName') || '',
+            email: localStorage.getItem('userEmail') || '',
+          },
+          theme: { color: '#111111' },
+          handler: async (response) => {
+            try {
+              await paymentAPI.verifyPayment({
+                bookingId: createdBooking._id,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                paymentMethod: normalizePaymentMethod(paymentMethod),
+              });
+              resolve();
+            } catch (error) {
+              reject(error);
+            }
+          },
+          modal: { ondismiss: () => reject(new Error('Payment cancelled')) },
+        });
+        checkout.open();
+      });
+
       await refreshTransactions();
       await loadMyBookings();
-
       setActiveTab('bookings');
       closeBooking();
 
-      // Customer popup
-      alert(`Booking Confirmed!\nVehicle: ${bookingModal.vehicle.name}\nDates: ${bookingDates.start} to ${bookingDates.end}`);
-    } catch (err) {
-      console.error(err);
-      const message = err?.response?.data?.message || err?.message || 'Unable to create booking.';
-      alert(message);
+      alert(`Payment confirmed!\nVehicle: ${bookingModal.vehicle.name}\nDates: ${bookingDates.start} to ${bookingDates.end}`);
     }
-  };
 
   const handleCancelBooking = async (id) => {
     if (!window.confirm("Are you sure you want to cancel this booking?")) return;
