@@ -12,7 +12,7 @@ import { generateToken } from '../utils/jwt.js';
 
 const sanitizeDealer = (dealer: any) => {
   if (!dealer) return null;
-  const { _id, gstNumber, shopName, address, city, pincode, bankName, accountNo, ifsc, approvalStatus, isActive, createdAt, updatedAt } = dealer;
+  const { _id, gstNumber, shopName, address, city, pincode, bankName, accountNo, ifsc, approvalStatus, officialVerificationStatus, officialVerificationCheckedAt, createdAt, updatedAt } = dealer;
   return {
     id: _id,
     gstNumber,
