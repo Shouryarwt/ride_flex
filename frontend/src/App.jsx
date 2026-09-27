@@ -32,9 +32,9 @@ function App() {
           <Route path="/explore" element={<Explore />} />
           <Route path="/vehicles/:id" element={<VehicleDetails />} />
           <Route path="/booking" element={<Booking />} />
-          <Route path="/dealer" element={<DealerDashboard />} />
-          <Route path="/dealer/onboarding" element={<DealerOnboarding />} />
-          <Route path="/dealer/vehicles/new" element={<VehicleOnboarding />} />
+          <Route path="/dealer" element={<ProtectedRoute allowedRole="seller"><DealerDashboard /></ProtectedRoute>} />
+          <Route path="/dealer/onboarding" element={<ProtectedRoute allowedRole="seller"><DealerOnboarding /></ProtectedRoute>} />
+          <Route path="/dealer/vehicles/new" element={<ProtectedRoute allowedRole="seller"><VehicleOnboarding /></ProtectedRoute>} />
           <Route path="/auth" element={<Auth />} />
           <Route 
             path="/dashboard" 
