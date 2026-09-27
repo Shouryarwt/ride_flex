@@ -142,6 +142,19 @@ const vehicleSchema = new Schema<IVehicle>(
       type: Boolean,
       default: true,
     },
+    verificationStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+      index: true,
+    },
+    rejectionReason: {
+      type: String,
+      trim: true,
+    },
+    publishedAt: {
+      type: Date,
+    },
   },
   { 
     timestamps: true,
@@ -152,6 +165,6 @@ const vehicleSchema = new Schema<IVehicle>(
 
 vehicleSchema.index({ seller: 1 });
 vehicleSchema.index({ city: 1, type: 1 });
-vehicleSchema.index({ isActive: 1 });
+vehicleSchema.index({ isActive: 1, verificationStatus: 1 });
 
 export const Vehicle = mongoose.model<IVehicle>('Vehicle', vehicleSchema);
