@@ -16,6 +16,7 @@ router.get('/my-vehicles', authenticate, authorize('seller'), getMyVehicles);
 router.get('/:id', getVehicleById);
 router.post('/', authenticate, authorize('seller'), createVehicle);
 router.put('/:id', authenticate, authorize('seller'), updateVehicle);
+router.post('/:id/review', authenticate, authorize('admin'), reviewVehicle);
 router.delete('/:id', authenticate, authorize('seller'), deleteVehicle);
 
 export default router;
