@@ -27,7 +27,7 @@ export const getDealerProfile = asyncHandler(async (req: AuthRequest, res: Respo
 });
 
 export const updateDealerProfile = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { shopName, address, city, pincode, bankName, accountNo, ifsc } = req.body;
+  const { shopName, address, city, pincode, bankName, accountNo, ifsc, serviceRadius, deliveryAvailable, deliveryChargePerKm, openingTime, closingTime, businessType, ownerName, panNumber } = req.body;
 
   const dealer = await Dealer.findOne({ user: req.user!._id });
 
@@ -35,7 +35,7 @@ export const updateDealerProfile = asyncHandler(async (req: AuthRequest, res: Re
     throw new ApiError(404, 'Dealer profile not found');
   }
 
-  Object.assign(dealer, { shopName, address, city, pincode, bankName, accountNo, ifsc });
+  Object.assign(dealer, { shopName, address, city, pincode, bankName, accountNo, ifsc, serviceRadius, deliveryAvailable, deliveryChargePerKm, openingTime, closingTime, businessType, ownerName, panNumber });
   await dealer.save();
 
   res.status(200).json({
