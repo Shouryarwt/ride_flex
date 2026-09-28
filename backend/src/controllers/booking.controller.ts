@@ -66,9 +66,40 @@ export const createBooking = asyncHandler(async (req: AuthRequest, res: Response
     throw new ApiError(400, 'Booking start date cannot be in the past');
   }
 
-  if (Number(totalHours) <= 0 || Number(totalAmount) < 0) {
-    throw new ApiError(400, 'Invalid booking amount or duration');
+  if (!['pickup', 'delivery'].includes(pickupOption)) {
+    throw new ApiError(400, 'Invalid pickup option');
   }
+  if (pickupOption === 'delivery' && !String(deliveryAddress || '').trim()) {
+    throw new ApiError(400, 'Delivery address is required for home delivery');
+  }
+
+  const totalHoursCalculated = Math.max(
+    1,
+    Math.ceil((requestedEnd.getTime() - requestedStart.getTime()) / 3600000)
+  );
+  const rentalDays = Math.max(1, Math.ceil(totalHoursCalculated / 24));
+  if (vehicle.minDuration && rentalDays < vehicle.minDuration) {
+    throw new ApiError(400, `Minimum rental duration is ${vehicle.minDuration} day(s)`);
+  }
+  if (vehicle.availableFrom && requestedStart < vehicle.availableFrom) {
+    throw new ApiError(400, 'Vehicle is not available on the selected start date');
+  }
+  if (vehicle.availableTo && requestedEnd > vehicle.availableTo) {
+    throw new ApiError(400, 'Vehicle is not available for the selected return date');
+  }
+
+  if (pickupOption === 'delivery' && !vehicle.deliveryAvailable) {
+    throw new ApiError(400, 'Home delivery is not available for this vehicle');
+  }
+
+  const normalizedDistance = Math.max(0, Number(deliveryDistanceKm) || 0);
+  const deliveryFee = pickupOption === 'delivery'
+    ? Math.round(normalizedDistance * Number(vehicle.deliveryChargePerKm || 0))
+    : 0;
+  const rentalSubtotal = rentalDays * Number(vehicle.pricePerDay || 0);
+  const securityDeposit = Number((vehicle as any).securityDeposit || 0);
+  const platformFee = Math.round(rentalSubtotal * 0.05);
+  const totalAmount = rentalSubtotal + platformFee + deliveryFee + securityDeposit;
 
   // Check for overlapping bookings
   const overlappingBooking = await Booking.findOne({
