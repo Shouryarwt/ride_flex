@@ -33,8 +33,11 @@ const configuredOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
 const vercelOrigin = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`.replace(/\/$/, '')
   : '';
+const configuredAppUrl = process.env.APP_URL
+  ? process.env.APP_URL.replace(/\/$/, '')
+  : '';
 
-const allowedOrigins = new Set([...configuredOrigins, vercelOrigin].filter(Boolean));
+const allowedOrigins = new Set([...configuredOrigins, vercelOrigin, configuredAppUrl].filter(Boolean));
 
 app.use(helmet());
 app.use(cors({
