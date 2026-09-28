@@ -66,6 +66,7 @@ const SellerDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [docPopupVehicle, setDocPopupVehicle] = useState(null);
+  const [overview, setOverview] = useState(null);
 
   const initialVehicleState = {
     title: '',
@@ -399,6 +400,14 @@ const SellerDashboard = () => {
 
     fetchVehicles();
   }, []);
+  useEffect(() => {
+    const token = localStorage.getItem('rideFlexToken') || sessionStorage.getItem('rideFlexToken');
+    fetch('/api/dealers/overview', { headers: { Authorization: `Bearer ${token}` } })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error('overview failed')))
+      .then((data) => setOverview(data.metrics || null))
+      .catch(() => {});
+  }, []);
+
 
   // Fetch seller bookings/requests and show notifications.
   useEffect(() => {
@@ -455,7 +464,25 @@ const SellerDashboard = () => {
     loadRequests();
     const interval = setInterval(loadRequests, 30000);
 
-    return () => {
+        {overview && (
+        <div className="max-w-7xl mx-auto px-6 pt-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              ['Inventory', overview.inventory],
+              ['Pending vehicles', overview.pendingVehicles],
+              ['Bookings', overview.bookings],
+              ['Revenue', `₹${Number(overview.revenue || 0).toLocaleString('en-IN')}`],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+                <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
+                <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+  return () => {
       cancelled = true;
       clearInterval(interval);
     };
