@@ -58,6 +58,11 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
     gstNumber, shopName, address, pincode, bankName, accountNo, ifsc, idProof, gstProof, shopLicense 
   } = req.body;
 
+  // Public registration may only create customer or seller accounts. Admins are provisioned separately.
+  if (role && !['user', 'seller'].includes(role)) {
+    throw new ApiError(403, 'This role cannot be created through public registration');
+  }
+
   // Basic validation
   if (!name || !email || !mobile || !password) {
     throw new ApiError(400, 'Name, email, mobile, and password are required');
