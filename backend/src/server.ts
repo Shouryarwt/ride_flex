@@ -21,15 +21,24 @@ dotenv.config();
 
 export const app = express();
 
-const allowedOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+const configuredOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/\/$/, ''))
   .filter(Boolean);
+
+const vercelOrigin = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`.replace(/\/$/, '')
+  : '';
+
+const allowedOrigins = new Set([...configuredOrigins, vercelOrigin].filter(Boolean));
 
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    // Same-origin requests and non-browser requests do not send an Origin header.
+    if (!origin) return callback(null, true);
+    const normalizedOrigin = origin.replace(/\/$/, '');
+    if (allowedOrigins.has(normalizedOrigin)) return callback(null, true);
     return callback(new Error('CORS origin not allowed'));
   },
   credentials: true,
