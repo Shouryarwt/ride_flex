@@ -22,18 +22,25 @@ const dealerSchema = new Schema<IDealer>(
       required: [true, 'Shop name is required'],
       trim: true,
     },
+    ownerName: { type: String, trim: true },
+    businessType: {
+      type: String,
+      enum: ['Individual', 'Partnership', 'Private Ltd / LLP'],
+    },
+    panNumber: { type: String, trim: true, uppercase: true },
     address: {
       type: String,
       required: [true, 'Address is required'],
       trim: true,
     },
+    street: { type: String, trim: true },
+    area: { type: String, trim: true },
     city: {
       type: String,
       required: [true, 'City is required'],
       trim: true,
     },
     state: { type: String, trim: true },
-
     serviceRadius: { type: Number, min: 0 },
     pincode: {
       type: String,
@@ -46,6 +53,7 @@ const dealerSchema = new Schema<IDealer>(
       required: [true, 'Bank name is required'],
       trim: true,
     },
+    accountHolder: { type: String, trim: true },
     accountNo: {
       type: String,
       required: [true, 'Account number is required'],
@@ -58,19 +66,32 @@ const dealerSchema = new Schema<IDealer>(
       trim: true,
       match: [/^[A-Z]{4}0[A-Z0-9]{6}$/, 'Invalid IFSC code format'],
     },
-    idProof: {
-      type: String,
-    },
-    gstProof: {
-      type: String,
-    },
+    upi: { type: String, trim: true },
+    deliveryAvailable: { type: Boolean, default: false },
+    deliveryChargePerKm: { type: Number, min: 0, default: 0 },
+    openingTime: { type: String, trim: true },
+    closingTime: { type: String, trim: true },
+    pricePerDay: { type: Number, min: 0 },
+    securityDeposit: { type: Number, min: 0, default: 0 },
+    idProof: { type: String },
+    gstProof: { type: String },
+    shopLicense: { type: String },
     approvalStatus: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
       default: 'pending',
     },
+    officialVerificationStatus: {
+      type: String,
+      enum: ['pending', 'verified', 'rejected'],
+      default: 'pending',
+    },
+    officialVerificationCheckedAt: { type: Date },
+    officialVerificationSource: { type: String },
+    officialVerificationReference: { type: String },
+    officialVerificationNotes: { type: String },
   },
-  { 
+  {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
@@ -79,5 +100,6 @@ const dealerSchema = new Schema<IDealer>(
 
 dealerSchema.index({ gstNumber: 1 }, { unique: true, name: 'dealer_gst_unique' });
 dealerSchema.index({ user: 1 });
+dealerSchema.index({ city: 1, approvalStatus: 1 });
 
 export const Dealer = mongoose.model<IDealer>('Dealer', dealerSchema);

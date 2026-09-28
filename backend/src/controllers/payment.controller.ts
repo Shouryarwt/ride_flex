@@ -15,6 +15,7 @@ export const createPaymentOrder = asyncHandler(async (req: AuthRequest, res: Res
   if (booking.user.toString() !== req.user!._id.toString()) throw new ApiError(403, 'You can only pay for your own bookings');
   if (booking.bookingStatus === 'cancelled' || booking.bookingStatus === 'rejected') throw new ApiError(400, 'This booking cannot be paid');
   if (booking.paymentStatus === 'paid') throw new ApiError(400, 'Booking is already paid');
+  if (!booking.totalAmount || booking.totalAmount <= 0) throw new ApiError(400, 'Invalid booking amount');
 
   const order = await createRazorpayOrder(Number(booking.totalAmount), `booking_${booking._id}`);
   booking.paymentStatus = 'authorized';
@@ -45,6 +46,10 @@ export const verifyPayment = asyncHandler(async (req: AuthRequest, res: Response
 
   const valid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
   if (!valid) throw new ApiError(400, 'Invalid payment signature');
+
+  if (booking.paymentStatus === 'paid' && booking.paymentTransactionId === razorpayPaymentId) {
+    return res.status(200).json({ success: true, message: 'Payment already verified' });
+  }
 
   const existing = await Payment.findOne({ transactionId: razorpayPaymentId });
   if (!existing) {

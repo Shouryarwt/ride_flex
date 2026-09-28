@@ -8,7 +8,13 @@ export default function Explore() {
   const [vehicles, setVehicles] = useState([]); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
   const [query, setQuery] = useState(params.get('q') || ''); const [type, setType] = useState(params.get('type') || 'all');
   const [fuel, setFuel] = useState('all'); const [maxPrice, setMaxPrice] = useState(''); const [sort, setSort] = useState('recommended'); const [filters, setFilters] = useState(false);
-  useEffect(() => { let active = true; setLoading(true); vehicleAPI.getVehicles({ limit: 60, search: query || undefined, type: type !== 'all' ? type : undefined }).then(d => active && setVehicles(d.vehicles || d.data || [])).catch(e => active && setError(e.message || 'Unable to load fleet')).finally(() => active && setLoading(false)); return () => { active = false; }; }, [query, type]);
+  useEffect(() => { let active = true; setLoading(true); vehicleAPI.getVehicles({
+      limit: 60,
+      search: query || undefined,
+      type: type !== 'all' ? type : undefined,
+      fuelType: fuel !== 'all' ? fuel : undefined,
+      maxPrice: maxPrice || undefined,
+    }).then(d => active && setVehicles(d.vehicles || d.data || [])).catch(e => active && setError(e.message || 'Unable to load fleet')).finally(() => active && setLoading(false)); return () => { active = false; }; }, [query, type]);
   const shown = useMemo(() => { const r = vehicles.filter(v => { const p = Number(v.pricePerDay ?? v.basePrice ?? v.dailyRate ?? 0); return (!maxPrice || p <= Number(maxPrice)) && (fuel === 'all' || String(v.fuelType || '').toLowerCase() === fuel.toLowerCase()); }); return r.sort((a,b) => sort === 'price-low' ? Number(a.pricePerDay ?? a.basePrice ?? 0)-Number(b.pricePerDay ?? b.basePrice ?? 0) : sort === 'price-high' ? Number(b.pricePerDay ?? b.basePrice ?? 0)-Number(a.pricePerDay ?? a.basePrice ?? 0) : 0); }, [vehicles,fuel,maxPrice,sort]);
   const clear = () => { setQuery(''); setType('all'); setFuel('all'); setMaxPrice(''); };
   return <main className="min-h-screen bg-[#08090b] text-white pt-20">
