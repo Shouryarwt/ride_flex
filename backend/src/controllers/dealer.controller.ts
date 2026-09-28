@@ -107,6 +107,13 @@ export const approveDealerStatus = asyncHandler(async (req: AuthRequest, res: Re
     throw new ApiError(404, 'Dealer not found');
   }
 
+  if (status === 'approved' && dealer.officialVerificationStatus !== 'verified') {
+    throw new ApiError(
+      409,
+      'Dealer cannot be approved until the submitted documents are verified against an authorised Government of India source'
+    );
+  }
+
   dealer.approvalStatus = status;
   await dealer.save();
 
