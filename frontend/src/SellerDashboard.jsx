@@ -464,24 +464,6 @@ const SellerDashboard = () => {
     loadRequests();
     const interval = setInterval(loadRequests, 30000);
 
-        {overview && (
-        <div className="max-w-7xl mx-auto px-6 pt-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              ['Inventory', overview.inventory],
-              ['Pending vehicles', overview.pendingVehicles],
-              ['Bookings', overview.bookings],
-              ['Revenue', `₹${Number(overview.revenue || 0).toLocaleString('en-IN')}`],
-            ].map(([label, value]) => (
-              <div key={label} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-5">
-                <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
-                <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
   return () => {
       cancelled = true;
       clearInterval(interval);
@@ -543,6 +525,25 @@ const SellerDashboard = () => {
       alert(e?.message || 'Admin approval simulation failed');
     }
   };
+
+        {overview && (
+        <div className="max-w-7xl mx-auto px-6 pt-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              ['Inventory', overview.inventory],
+              ['Pending vehicles', overview.pendingVehicles],
+              ['Bookings', overview.bookings],
+              ['Revenue', `₹${Number(overview.revenue || 0).toLocaleString('en-IN')}`],
+            ].map(([label, value]) => (
+              <div key={label} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+                <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
+                <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
