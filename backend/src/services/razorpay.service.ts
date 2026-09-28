@@ -28,8 +28,12 @@ export const createRazorpayOrder = async (amountInRupees: number, receipt: strin
 
 export const verifyRazorpaySignature = (orderId: string, paymentId: string, signature: string) => {
   const { keySecret } = getCredentials();
+  if (!signature) return false;
   const expected = crypto.createHmac('sha256', keySecret)
     .update(`${orderId}|${paymentId}`)
     .digest('hex');
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  const expectedBuffer = Buffer.from(expected, 'utf8');
+  const actualBuffer = Buffer.from(String(signature), 'utf8');
+  if (expectedBuffer.length !== actualBuffer.length) return false;
+  return crypto.timingSafeEqual(expectedBuffer, actualBuffer);
 };
