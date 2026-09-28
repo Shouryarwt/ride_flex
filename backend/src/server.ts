@@ -91,12 +91,32 @@ app.get('/api/health', (_req, res) => {
     99: 'uninitialized',
   };
 
-  res.status(dbState === 1 ? 200 : 503).json({
-    success: dbState === 1,
-    status: dbState === 1 ? 'healthy' : 'degraded',
+  res.status(200).json({
+    success: true,
+    status: 'ok',
     database: dbStatusMap[dbState] || 'unknown',
     timestamp: new Date().toISOString(),
   });
+});
+
+app.get('/api/ready', async (_req, res) => {
+  try {
+    await connectDatabase();
+    res.status(200).json({
+      success: true,
+      status: 'ready',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      status: 'not_ready',
+      database: 'disconnected',
+      message: error instanceof Error ? error.message : 'Database unavailable',
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 app.use('/api/auth', authRoutes);
