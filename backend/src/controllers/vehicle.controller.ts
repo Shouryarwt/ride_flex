@@ -211,7 +211,9 @@ export const getVehicles = asyncHandler(async (req: AuthRequest, res: Response) 
     if (maxPrice) query.pricePerDay.$lte = Number(maxPrice);
   }
 
-  const skip = (Number(page) - 1) * Number(limit);
+  const safePage = Math.max(1, Number(page) || 1);
+  const safeLimit = Math.min(50, Math.max(1, Number(limit) || 12));
+  const skip = (safePage - 1) * safeLimit;
 
   const vehicles = await Vehicle.find(query)
     .select('-rcDocument -insuranceDocument -pollutionDocument')
