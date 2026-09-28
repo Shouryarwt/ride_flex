@@ -464,10 +464,25 @@ const SellerDashboard = () => {
     loadRequests();
     const interval = setInterval(loadRequests, 30000);
 
-  return (
-    <>
-      {overviewCards}
-) => {
+    const overviewCards = overview ? (
+    <div className="mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          ['Inventory', overview.inventory],
+          ['Pending vehicles', overview.pendingVehicles],
+          ['Bookings', overview.bookings],
+          ['Revenue', `₹${Number(overview.revenue || 0).toLocaleString('en-IN')}`],
+        ].map(([label, value]) => (
+          <div key={label} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+            <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
+  return () => {
       cancelled = true;
       clearInterval(interval);
     };
@@ -532,6 +547,7 @@ const SellerDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
       <div className="container mx-auto p-6 dark:text-white">
+        {overviewCards}
         <h1 className="text-3xl font-bold mb-6 text-slate-800 dark:text-white">{user?.shopName || 'Dealer'} Dashboard</h1>
 
         {user?.role === 'seller' && user?.dealer?.approvalStatus === 'pending' && (
