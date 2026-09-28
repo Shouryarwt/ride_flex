@@ -495,7 +495,7 @@ const SellerDashboard = () => {
         return;
       }
 
-      const res = await fetch(`${(import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')}/dealers/${dealerId}/approve`, {
+      const res = await fetch(`${'/api'}/dealers/${dealerId}/approve`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
