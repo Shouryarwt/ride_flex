@@ -1,13 +1,13 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "cd frontend && node --input-type=module -e \"import('vite').then(({ build }) => build()).catch((error) => { console.error(error); process.exit(1); })\"",
+  "buildCommand": "cd frontend && node node_modules/vite/bin/vite.js build",
   "outputDirectory": "frontend/dist",
   "framework": "vite",
+  "installCommand": "npm install && npm --prefix backend install && npm --prefix frontend install",
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "installCommand": "cd frontend && npm install"
+  ]
 }
