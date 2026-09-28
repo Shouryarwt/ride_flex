@@ -44,6 +44,7 @@ export const createReview = asyncHandler(async (req: AuthRequest, res: Response)
 
 export const getVehicleReviews = asyncHandler(async (req: AuthRequest, res: Response) => {
   const vehicleId = req.params.vehicleId;
+  if (!mongoose.isValidObjectId(vehicleId)) throw new ApiError(400, 'Invalid vehicle id');
   const [reviews, aggregate] = await Promise.all([
     Review.find({ vehicle: vehicleId })
       .populate('user', 'name profilePic')
