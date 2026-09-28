@@ -5,6 +5,7 @@ import { vehicleAPI } from './api/vehicles';
 import { bookingAPI } from './api/bookings';
 import { favoritesAPI } from './api/favorites';
 import { paymentAPI } from './api/payments';
+import { reviewAPI } from './api/reviews';
 
 
 
