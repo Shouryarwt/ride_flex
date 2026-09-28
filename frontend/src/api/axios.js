@@ -31,7 +31,7 @@ const request = async (method, path, { params, data, headers = {} } = {}) => {
     });
   } catch (error) {
     const message = error instanceof TypeError
-      ? 'Unable to reach the Ride Flex API. Check VITE_API_URL and make sure the backend is deployed.'
+      ? 'Unable to reach the Ride Flex API. Check the deployment API route and backend status.'
       : error?.message || 'Unable to reach the Ride Flex API.';
     const apiError = new Error(message);
     apiError.cause = error;
