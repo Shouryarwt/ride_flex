@@ -12,7 +12,7 @@ export default function Vehicles() {
   useEffect(() => {
     const fetchVehicles = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/vehicles`);
+        const response = await fetch(`${(import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')}/vehicles`);
         if (!response.ok) throw new Error('Failed to fetch vehicles');
         const data = await response.json();
         
