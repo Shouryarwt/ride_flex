@@ -185,6 +185,14 @@ const Auth = () => {
           >
             Dealer (Seller)
           </button>
+          {isLogin && (
+            <button
+              className={`flex-1 py-2 rounded-md font-medium transition ${role === 'admin' ? 'bg-white shadow text-slate-900' : 'text-slate-500 dark:text-slate-400'}`}
+              onClick={() => setRole('admin')}
+            >
+              Admin
+            </button>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
