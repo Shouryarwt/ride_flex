@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { Booking } from '../models/Booking.model.js';
 import { Review } from '../models/Review.model.js';
 import { Vehicle } from '../models/Vehicle.model.js';
+import mongoose from 'mongoose';
 import { AuthRequest } from '../types/index.js';
 import { ApiError } from '../utils/ApiError.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
@@ -50,7 +51,7 @@ export const getVehicleReviews = asyncHandler(async (req: AuthRequest, res: Resp
       .limit(50)
       .lean(),
     Review.aggregate([
-      { $match: { vehicle: new (Vehicle as any).db.base.Types.ObjectId(vehicleId) } },
+      { $match: { vehicle: new mongoose.Types.ObjectId(vehicleId) } },
       { $group: { _id: '$vehicle', average: { $avg: '$rating' }, count: { $sum: 1 } } },
     ]),
   ]);
