@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { adminAPI } from './api/admin';
 import { CheckCircle, XCircle, ShieldCheck, Bell, FileText } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -10,6 +11,7 @@ export default function AdminDashboard() {
 
   const [pendingCount, setPendingCount] = useState(0);
   const [showPendingAlert, setShowPendingAlert] = useState(true);
+  const [metrics, setMetrics] = useState(null);
 
   useEffect(() => {
     fetchDealers();
@@ -168,6 +170,26 @@ export default function AdminDashboard() {
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {metrics && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            ['Users', metrics.users],
+            ['Approved dealers', metrics.dealersApproved],
+            ['Fleet', metrics.vehicles],
+            ['Active bookings', metrics.bookingsActive],
+            ['Pending dealers', metrics.dealersPending],
+            ['Pending vehicles', metrics.vehiclesPending],
+            ['Payments', metrics.successfulPayments],
+            ['Revenue', `₹${Number(metrics.revenue || 0).toLocaleString('en-IN')}`],
+          ].map(([label, value]) => (
+            <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+              <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
+              <p className="mt-2 text-2xl font-extrabold text-gray-900">{value}</p>
+            </div>
+          ))}
         </div>
       )}
 
