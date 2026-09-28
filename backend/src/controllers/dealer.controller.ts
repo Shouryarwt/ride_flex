@@ -160,6 +160,21 @@ export const verifyDealerOfficially = asyncHandler(async (req: AuthRequest, res:
   const dealer = await Dealer.findById(req.params.id);
   if (!dealer) throw new ApiError(404, 'Dealer not found');
 
+  if (status === 'verified') {
+    const missingDocuments = [
+      ['idProof', dealer.idProof],
+      ['gstProof', dealer.gstProof],
+      ['shopLicense', dealer.shopLicense],
+    ].filter(([, value]) => !value).map(([name]) => name);
+
+    if (missingDocuments.length) {
+      throw new ApiError(
+        400,
+        `Cannot record official verification. Missing documents: ${missingDocuments.join(', ')}`
+      );
+    }
+  }
+
   dealer.officialVerificationStatus = status;
   dealer.officialVerificationCheckedAt = new Date();
   dealer.officialVerificationSource = String(source);
