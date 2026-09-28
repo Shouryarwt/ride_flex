@@ -30,7 +30,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem('rideFlexToken') || sessionStorage.getItem('rideFlexToken');
       if (!token) return;
       const response = await fetch(
-        `${(import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')}/dealers?approvalStatus=pending`, 
+        `${'/api'}/dealers?approvalStatus=pending`, 
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
         window.location.href = '/auth';
         return;
       }
-      const response = await fetch(`${(import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')}/dealers`, {
+      const response = await fetch(`${'/api'}/dealers`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -86,7 +86,7 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem('rideFlexToken') || sessionStorage.getItem('rideFlexToken');
       const response = await fetch(
-        `${(import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')}/dealers/${id}/official-verification`,
+        `${'/api'}/dealers/${id}/official-verification`,
         {
           method: 'PUT',
           headers: {
@@ -124,7 +124,7 @@ export default function AdminDashboard() {
 
     try {
       const token = localStorage.getItem('rideFlexToken') || sessionStorage.getItem('rideFlexToken');
-      const response = await fetch(`${(import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')}/dealers/${id}/approve`, {
+      const response = await fetch(`${'/api'}/dealers/${id}/approve`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
