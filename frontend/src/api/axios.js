@@ -1,15 +1,4 @@
-const rawApiUrl = String(import.meta.env.VITE_API_URL || '').trim();
-
-const normalizeApiUrl = (value) => {
-  if (!value) return window.location.origin + '/api';
-  if (/^https?:\/\//i.test(value)) return value.replace(/\/$/, '');
-  if (value.startsWith('/')) {
-    return new URL(value, window.location.origin).toString().replace(/\/$/, '');
-  }
-  return 'https://' + value.replace(/\/$/, '');
-};
-
-const API_URL = normalizeApiUrl(rawApiUrl);
+const API_URL = window.location.origin + '/api';
 
 const getToken = () =>
   localStorage.getItem('rideFlexToken') || sessionStorage.getItem('rideFlexToken');
