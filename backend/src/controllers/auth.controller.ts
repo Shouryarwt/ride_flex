@@ -24,7 +24,11 @@ const sanitizeDealer = (dealer: any) => {
     accountNo,
     ifsc,
     approvalStatus,
-    isActive,
+    officialVerificationStatus,
+    officialVerificationCheckedAt,
+    officialVerificationSource,
+    officialVerificationReference,
+    officialVerificationNotes,
     createdAt,
     updatedAt,
   };
