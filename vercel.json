@@ -15,5 +15,11 @@
       "path": "/api/notifications/jobs/compliance",
       "schedule": "0 3 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/[...path].ts": {
+      "runtime": "nodejs22.x",
+      "maxDuration": 30
+    }
+  }
 }
