@@ -20,6 +20,8 @@ import notificationRoutes from './routes/notification.routes.js';
 dotenv.config();
 
 export const app = express();
+// Vercel terminates TLS/proxying in front of Express; trust the first proxy hop.
+app.set('trust proxy', 1);
 
 const configuredOrigins = (process.env.CORS_ORIGIN || 'http://localhost:5173')
   .split(',')
