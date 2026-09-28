@@ -34,7 +34,14 @@ const deactivateExpiredVehicles = async () => {
 };
 
 export const createBooking = asyncHandler(async (req: AuthRequest, res: Response) => {
-  const { vehicleId, startDate, endDate, totalHours, totalAmount } = req.body;
+  const {
+    vehicleId,
+    startDate,
+    endDate,
+    pickupOption = 'pickup',
+    deliveryAddress,
+    deliveryDistanceKm = 0,
+  } = req.body;
 
   await deactivateExpiredVehicles();
 
