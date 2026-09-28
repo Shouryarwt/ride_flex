@@ -56,7 +56,10 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 if (process.env.NODE_ENV !== 'test') {
-  app.use('/api', async (_req, _res, next) => {
+  app.use('/api', async (req, _res, next) => {
+    // Liveness must remain available even when MongoDB is unavailable.
+    if (req.path === '/health') return next();
+
     try {
       await connectDatabase();
       next();
