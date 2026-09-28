@@ -464,7 +464,10 @@ const SellerDashboard = () => {
     loadRequests();
     const interval = setInterval(loadRequests, 30000);
 
-  return () => {
+  return (
+    <>
+      {overviewCards}
+) => {
       cancelled = true;
       clearInterval(interval);
     };
@@ -526,25 +529,6 @@ const SellerDashboard = () => {
     }
   };
 
-        {overview && (
-        <div className="max-w-7xl mx-auto px-6 pt-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[
-              ['Inventory', overview.inventory],
-              ['Pending vehicles', overview.pendingVehicles],
-              ['Bookings', overview.bookings],
-              ['Revenue', `₹${Number(overview.revenue || 0).toLocaleString('en-IN')}`],
-            ].map(([label, value]) => (
-              <div key={label} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-5">
-                <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
-                <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-slate-900 transition-colors duration-300">
       <div className="container mx-auto p-6 dark:text-white">
@@ -557,7 +541,25 @@ const SellerDashboard = () => {
               <p className="text-yellow-700 text-sm">Your seller application is under review. Your vehicle listing will only become available for booking after admin approval.</p>
             </div>
             <button
-              onClick={handleSimulateVerification}
+              on  const overviewCards = overview ? (
+    <div className="max-w-7xl mx-auto px-6 pt-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          ['Inventory', overview.inventory],
+          ['Pending vehicles', overview.pendingVehicles],
+          ['Bookings', overview.bookings],
+          ['Revenue', `₹${Number(overview.revenue || 0).toLocaleString('en-IN')}`],
+        ].map(([label, value]) => (
+          <div key={label} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+            <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
+            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  ) : null;
+
+Click={handleSimulateVerification}
               className="bg-yellow-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-yellow-700 shadow-sm whitespace-nowrap"
             >
               Simulate Admin Approval
