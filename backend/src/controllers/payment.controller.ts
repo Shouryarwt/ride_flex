@@ -47,6 +47,10 @@ export const verifyPayment = asyncHandler(async (req: AuthRequest, res: Response
   const valid = verifyRazorpaySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature);
   if (!valid) throw new ApiError(400, 'Invalid payment signature');
 
+  if (booking.paymentStatus === 'paid' && booking.paymentTransactionId === razorpayPaymentId) {
+    return res.status(200).json({ success: true, message: 'Payment already verified' });
+  }
+
   const existing = await Payment.findOne({ transactionId: razorpayPaymentId });
   if (!existing) {
     await Payment.create({
