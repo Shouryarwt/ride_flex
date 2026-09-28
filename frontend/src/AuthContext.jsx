@@ -192,7 +192,7 @@ export const AuthProvider = ({ children }) => {
     if (!user) return { success: false, message: "No user logged in." };
     try {
       const token = getStoredToken();
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/account`, {
+      const response = await fetch(`${(import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')}/auth/account`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
