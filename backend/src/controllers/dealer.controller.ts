@@ -196,3 +196,35 @@ export const verifyDealerOfficially = asyncHandler(async (req: AuthRequest, res:
     dealer: sanitizeDealerForSeller(dealer),
   });
 });
+
+
+export const getDealerOverview = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const vehicleIds = (await Vehicle.find({ seller: req.user!._id }).select('_id')).map((v) => v._id);
+  const [inventory, pendingVehicles, bookings, activeBookings, completedRevenue] = await Promise.all([
+    Vehicle.countDocuments({ seller: req.user!._id }),
+    Vehicle.countDocuments({ seller: req.user!._id, verificationStatus: 'pending' }),
+    (await import('../models/Booking.model.js')).Booking.countDocuments({ vehicle: { $in: vehicleIds } }),
+    (await import('../models/Booking.model.js')).Booking.countDocuments({
+      vehicle: { $in: vehicleIds },
+      bookingStatus: { $in: ['pending', 'confirmed'] },
+    }),
+    (await import('../models/Payment.model.js')).Payment.aggregate([
+      { $match: { status: 'success', user: { $ne: null } } },
+      { $lookup: { from: 'bookings', localField: 'booking', foreignField: '_id', as: 'booking' } },
+      { $unwind: '$booking' },
+      { $match: { 'booking.vehicle': { $in: vehicleIds } } },
+      { $group: { _id: null, total: { $sum: '$amount' } } },
+    ]),
+  ]);
+
+  res.json({
+    success: true,
+    metrics: {
+      inventory,
+      pendingVehicles,
+      bookings,
+      activeBookings,
+      revenue: Number(completedRevenue[0]?.total || 0),
+    },
+  });
+});
