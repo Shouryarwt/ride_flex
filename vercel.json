@@ -9,5 +9,11 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/notifications/jobs/compliance",
+      "schedule": "0 3 * * *"
+    }
   ]
 }
