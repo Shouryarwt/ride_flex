@@ -817,10 +817,23 @@ const UserDashboard = () => {
     setReviewModal({ isOpen: false, bookingId: null, vehicleName: '' });
   };
 
-  const handleReviewSubmit = (e) => {
+  const handleReviewSubmit = async (e) => {
     e.preventDefault();
-    alert(`Review Submitted for ${reviewModal.vehicleName}\nRating: ${reviewData.rating} Stars\nComment: ${reviewData.comment}`);
-    closeReview();
+    if (!reviewData.rating) {
+      alert('Please select a rating.');
+      return;
+    }
+    try {
+      await reviewAPI.createReview({
+        bookingId: reviewModal.bookingId,
+        rating: reviewData.rating,
+        comment: reviewData.comment,
+      });
+      alert('Thanks — your review has been submitted.');
+      closeReview();
+    } catch (error) {
+      alert(error?.response?.data?.message || error?.message || 'Unable to submit review.');
+    }
   };
 
   const handleDownloadInvoice = (booking) => {
