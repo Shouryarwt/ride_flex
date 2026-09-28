@@ -464,29 +464,31 @@ const SellerDashboard = () => {
     loadRequests();
     const interval = setInterval(loadRequests, 30000);
 
-    const overviewCards = overview ? (
-    <div className="mb-8">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          ['Inventory', overview.inventory],
-          ['Pending vehicles', overview.pendingVehicles],
-          ['Bookings', overview.bookings],
-          ['Revenue', `₹${Number(overview.revenue || 0).toLocaleString('en-IN')}`],
-        ].map(([label, value]) => (
-          <div key={label} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-5">
-            <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
-            <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  ) : null;
-
   return () => {
       cancelled = true;
       clearInterval(interval);
     };
   }, []);
+
+  const overviewCards = overview ? (
+  <div className="mb-8">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {[
+        ['Inventory', overview.inventory],
+        ['Pending vehicles', overview.pendingVehicles],
+        ['Bookings', overview.bookings],
+        ['Revenue', `₹${Number(overview.revenue || 0).toLocaleString('en-IN')}`],
+      ].map(([label, value]) => (
+        <div key={label} className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-sm p-5">
+          <p className="text-xs uppercase tracking-wider text-gray-400 font-semibold">{label}</p>
+          <p className="mt-2 text-2xl font-extrabold text-slate-900 dark:text-white">{value}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+  ) : null;
+
+
 
   const totalEarnings = MOCK_TRANSACTIONS
     .filter((t) => t.status === 'Completed')
