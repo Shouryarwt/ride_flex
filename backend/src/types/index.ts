@@ -107,6 +107,15 @@ export interface IBooking extends Document {
   bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'rejected' | 'completed';
 }
 
+export interface INotification extends Document {
+  recipient: IUser['_id'];
+  booking?: IBooking['_id'];
+  vehicle?: IVehicle['_id'];
+  type: 'booking_request' | 'booking_confirmed' | 'booking_cancelled' | 'insurance_expiring' | 'pollution_expiring' | 'compliance_expired';
+  message: string;
+  read: boolean;
+}
+
 export interface IPayment extends Document {
   booking: IBooking['_id'];
   user: IUser['_id'];
