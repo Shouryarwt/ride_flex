@@ -55,3 +55,21 @@ export const getAdminOverview = asyncHandler(async (_req: AuthRequest, res: Resp
     },
   });
 });
+
+
+export const getPendingUsers = asyncHandler(async (_req: AuthRequest, res: Response) => {
+  const users = await User.find({ role: 'user', isVerified: false })
+    .select('name email mobile city dlNumber isVerified createdAt')
+    .sort({ createdAt: -1 })
+    .limit(200);
+  res.json({ success: true, users });
+});
+
+export const verifyUser = asyncHandler(async (req: AuthRequest, res: Response) => {
+  const user = await User.findOne({ _id: req.params.id, role: 'user' });
+  if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+  if (!user.dlNumber) return res.status(400).json({ success: false, message: 'Driving license number is missing' });
+  user.isVerified = true;
+  await user.save();
+  res.json({ success: true, message: 'Driving credentials verified', user });
+});
