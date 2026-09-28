@@ -30,18 +30,18 @@ const paymentSchema = new Schema<IPayment>(
     },
     status: {
       type: String,
-      enum: ['pending', 'success', 'failed'],
+      enum: ['pending', 'success', 'failed', 'refunded'],
       default: 'pending',
     },
   },
-  { 
+  {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
   }
 );
 
-paymentSchema.index({ booking: 1 });
+paymentSchema.index({ booking: 1, createdAt: -1 });
 paymentSchema.index({ transactionId: 1 });
 
 export const Payment = mongoose.model<IPayment>('Payment', paymentSchema);
