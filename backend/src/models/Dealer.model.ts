@@ -34,6 +34,7 @@ const dealerSchema = new Schema<IDealer>(
     },
     state: { type: String, trim: true },
 
+    serviceRadius: { type: Number, min: 0 },
     pincode: {
       type: String,
       required: [true, 'Pincode is required'],
