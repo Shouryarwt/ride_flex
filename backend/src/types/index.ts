@@ -79,6 +79,7 @@ export interface IVehicle extends Document {
   pricePerDay: number;
   deliveryAvailable: boolean;
   deliveryChargePerKm: number;
+  securityDeposit: number;
   isActive: boolean;
   verificationStatus: 'pending' | 'approved' | 'rejected';
   rejectionReason?: string;
