@@ -49,3 +49,72 @@ export interface IDealer extends Document {
   officialVerificationReference?: string;
   officialVerificationNotes?: string;
 }
+
+export interface IVehicle extends Document {
+  seller: IUser['_id'];
+  dealer: IDealer['_id'];
+  title: string;
+  description?: string;
+  type: 'bike' | 'scooter' | 'car';
+  fuelType: 'Petrol' | 'Diesel' | 'Electric' | 'CNG';
+  transmission: 'Manual' | 'Automatic';
+  seatingCapacity: number;
+  engineSegment: string;
+  city: string;
+  images: string[];
+  rcNumber: string;
+  insuranceStartDate: Date;
+  insuranceExpiry: Date;
+  insuranceDocument?: string;
+  pollutionStartDate: Date;
+  pollutionExpiry: Date;
+  pollutionDocument?: string;
+  rcDocument?: string;
+  availableFrom?: Date;
+  availableTo?: Date;
+  weekendPrice?: number;
+  holidayPrice?: number;
+  minDuration?: number;
+  pricePerHour: number;
+  pricePerDay: number;
+  deliveryAvailable: boolean;
+  deliveryChargePerKm: number;
+  isActive: boolean;
+  verificationStatus: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  publishedAt?: Date;
+}
+
+export interface IBooking extends Document {
+  user: IUser['_id'];
+  vehicle: IVehicle['_id'];
+  startDate: Date;
+  endDate: Date;
+  totalHours: number;
+  rentalSubtotal: number;
+  platformFee: number;
+  deliveryFee: number;
+  securityDeposit: number;
+  totalAmount: number;
+  pickupOption: 'pickup' | 'delivery';
+  deliveryAddress?: string;
+  deliveryDistanceKm?: number;
+  paymentStatus: 'pending' | 'authorized' | 'paid' | 'failed' | 'refunded';
+  paymentProvider: 'razorpay' | 'phonepe';
+  paymentOrderId?: string;
+  paymentTransactionId?: string;
+  bookingStatus: 'pending' | 'confirmed' | 'cancelled' | 'rejected' | 'completed';
+}
+
+export interface IPayment extends Document {
+  booking: IBooking['_id'];
+  user: IUser['_id'];
+  amount: number;
+  paymentMethod: 'card' | 'upi' | 'netbanking' | 'wallet';
+  transactionId: string;
+  status: 'pending' | 'success' | 'failed' | 'refunded';
+}
+
+export interface AuthRequest extends Request {
+  user?: IUser;
+}
