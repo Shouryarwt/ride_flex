@@ -12,9 +12,15 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "lint": "eslint src --ext .ts",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "create-admin": "node scripts/create-admin.mjs"
   },
-  "keywords": ["ride-flex", "express", "mongodb", "typescript"],
+  "keywords": [
+    "ride-flex",
+    "express",
+    "mongodb",
+    "typescript"
+  ],
   "license": "ISC",
   "dependencies": {
     "bcryptjs": "^2.4.3",
